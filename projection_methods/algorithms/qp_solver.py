@@ -4,7 +4,6 @@ from projection_methods.algorithms.utils import project
 import numpy as np
 
 class QPSolver(Optimizer):
-    MAX_ITERS = int(1e2)
 
     def _containing_halfspace(self, prev_iterate, point, cvx_var):
         normal = prev_iterate - point
@@ -21,12 +20,9 @@ class QPSolver(Optimizer):
         iterate = options['initial_point'] if \
             options.get('initial_point') is not None \
             else np.random.randn(problem.var_dim, 1) 
-        max_iters = options['max_iters'] if \
-            options.get('max_iters') is not None \
-            else QPSolver.MAX_ITERS
         iterates = [iterate]
-        # TODO(akshayka): Termination criteria.
-        for _ in xrange(max_iters):
+        self.errors = []
+        for _ in xrange(self.max_iters):
             prev_iterate = iterates[-1]
 
             # If the target convex sets lived in a 2-dimensional space
@@ -36,6 +32,12 @@ class QPSolver(Optimizer):
             left_point = project(prev_iterate, [cvx_sets[0]], cvx_var)
             right_point = project(prev_iterate, [cvx_sets[1]], cvx_var)
 
+            dist_set_one = np.linalg.norm(prev_iterate - left_point)
+            dist_set_two = np.linalg.norm(prev_iterate - right_point)
+            self.errors.append(dist_set_one + dist_set_two)
+            if (self.errors[-1] < self.eps):
+                break
+
             left_halfspace = self._containing_halfspace(prev_iterate,
                 left_point, cvx_var)
             right_halfspace = self._containing_halfspace(prev_iterate,
@@ -44,6 +46,6 @@ class QPSolver(Optimizer):
                 cvx_var)
             iterates.append(iterate)
 
-            if (np.allclose(prev_iterate, iterate)):
-                break
+#            if (np.allclose(prev_iterate, iterate)):
+#                break
         return iterates

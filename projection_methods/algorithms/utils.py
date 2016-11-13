@@ -16,7 +16,11 @@ def project(point, cvx_set, cvx_var):
     Returns
     ------- The projection of point onto cvx_set.
     """
+    # If the projection is unconstrained, the projection is trivially
+    # idempotent
+    if cvx_set == []:
+        return point
     obj = cvx.Minimize(cvx.norm(cvx_var - point, 2))
     prob = cvx.Problem(obj, cvx_set)
-    prob.solve()
+    prob.solve(solver=cvx.SCS)
     return cvx_var.value
