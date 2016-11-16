@@ -66,6 +66,21 @@ def project_cone(point, cone):
     return np.concatenate(points, axis=0)
 
 
+def make_feasibility_problem(cone, var_dim, data):
+    cvx_var = cvx.Variable(var_dim) 
+    cvx_set_affine = [data['A'] * cvx_var == data['b']]
+ 
+    cvx_set_cone = []
+    for t, slx in zip(cone.types, cone.slices):
+        cvx_set_cone += cvx_constraints_for_cone(t, cvx_var[slx])
+
+    cvx_sets = [cvx_set_affine, cvx_set_cone]
+    return FeasibilityProblem(
+        cvx_sets=cvx_sets,
+        cvx_var=cvx_var,
+        var_dim=var_dim)
+
+
 def random_feasibility_problem(cone, affine_dim):
     """Generate a random feasibility problem
 
@@ -91,8 +106,6 @@ def random_feasibility_problem(cone, affine_dim):
     - a dict data with the problem data and an optimal solution
     """
     var_dim = sum(cone.dims)
-    cvx_var = cvx.Variable(var_dim) 
-    cvx_sets = []
     data = {}
     data['cone'] = cone
 
@@ -106,10 +119,5 @@ def random_feasibility_problem(cone, affine_dim):
     b = A * x_opt
     data['A'] = A
     data['b'] = b
-    cvx_sets += [A * cvx_var == b]
- 
-    for t, slx in zip(cone.types, cone.slices):
-        cvx_sets += cvx_constraints_for_cone(t, cvx_var[slx])
 
-    return FeasibilityProblem(cvx_sets=cvx_sets, cvx_var=cvx_var,
-        var_dim=var_dim), data
+    return make_feasibility_problem(cone, var_dim, data), data

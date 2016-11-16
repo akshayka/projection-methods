@@ -1,9 +1,10 @@
 import abc
 
 class Optimizer(object):
-    def __init__(self, max_iters=100, eps=10e-5):
+    def __init__(self, max_iters=100, eps=10e-5, initial_point=None):
         self._max_iters = max_iters
         self._eps = eps
+        self._initial_point = initial_point
 
 
     @abc.abstractmethod

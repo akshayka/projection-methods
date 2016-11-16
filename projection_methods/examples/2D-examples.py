@@ -32,19 +32,19 @@ if args['l']:
     a = np.array([[m], [-1]])
     b = np.array([[m], [1]])
     point = np.array([[0], [100]])
-    cvx_sets = [a.T * x == 0, b.T * x == 0]
+    cvx_sets = [[a.T * x == 0], [b.T * x == 0]]
     problem = FeasibilityProblem(cvx_sets=cvx_sets, cvx_var=x, var_dim=2)
     options = {'initial_point': np.array([[0], [100]]), 'max_iters': 100}
 
     plt.figure()
     solver = AlternatingProjections()
-    iterates = solver.solve(problem, options)
-    plot(iterates, m)
+    solver.solve(problem, options)
+    plot(solver.iterates, m)
 
     plt.figure()
     solver = QPSolver()
-    iterates = solver.solve(problem, options)
-    plot(iterates, m)
+    solver.solve(problem, options)
+    plot(solver.iterates, m)
     plt.show()
 
 if args['c']:
@@ -54,8 +54,8 @@ if args['c']:
     options = {}
     options['initial_point'] = np.array([[0], [r]])
     options['max_iters'] = 10
-    cvx_sets = [cvx.square(x[0] - r) + cvx.square(x[1]) <= r**2,
-                cvx.square(x[0] + r) + cvx.square(x[1]) <= r**2]
+    cvx_sets = [[cvx.square(x[0] - r) + cvx.square(x[1]) <= r**2],
+                [cvx.square(x[0] + r) + cvx.square(x[1]) <= r**2]]
     problem = FeasibilityProblem(cvx_sets=cvx_sets, cvx_var=x, var_dim=2)
 
     # plot circles
@@ -78,11 +78,11 @@ if args['c']:
 
     plot_circles(plt.figure())
     solver = AlternatingProjections()
-    iterates = solver.solve(problem, options)
-    plot(iterates)
+    solver.solve(problem, options)
+    plot(solver.iterates)
 
     plot_circles(plt.figure())
     solver = QPSolver()
-    iterates = solver.solve(problem, options)
-    plot(iterates)
+    solver.solve(problem, options)
+    plot(solver.iterates)
     plt.show()

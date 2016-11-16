@@ -1,15 +1,37 @@
-from projection_methods.algorithms.optimizer import Optimizer
-from projection_methods.algorithms.utils import project
+import projection_methods.algorithms.optimizer as optimizer
+import projection_methods.algorithms.utils as utils
 
 import numpy as np
+import random
 
-class QPSolver(Optimizer):
+class QPSolver(optimizer.Optimizer):
+    DISCARD_POLICIES = frozenset(['evict']) 
+
+    def __init__(
+            self, max_iters=100, eps=10e-5, initial_point=None,
+            memory=2, discard_policy='evict', include_probability=1.0,
+            momentum=None, search_method=None,
+            boost_policy=None):
+        optimizer.Optimizer.__init__(self, max_iters, eps, initial_point)
+        self.memory = memory
+        if include_probability < 0 or include_probability > 1:
+            raise ValueError('include_probability must be in [0, 1]')
+        self.include_probability = include_probability
+        if discard_policy not in QPSolver.DISCARD_POLICIES:
+            raise ValueError(
+                'Discard policy must be chosen from ' +
+                str(QPSolver.DISCARD_POLICIES))
+        self.discard_policy = discard_policy
+        self.momentum = momentum
+        self.serach_method = search_method
+        self.boost_policy = boost_policy
+
 
     def _containing_halfspace(self, prev_iterate, point, cvx_var):
         normal = prev_iterate - point
-        # TODO(akshayka): Double check direction of inequality
-        halfspace =  [normal.T * (cvx_var - point) <= 0]
+        halfspace = (normal.T * (cvx_var - point) <= 0)
         return halfspace
+
 
     def solve(self, problem, options={}):
         """problem needs cvx_sets, cvx_vars, var_dim"""
@@ -17,35 +39,56 @@ class QPSolver(Optimizer):
         cvx_var = problem.cvx_var
 
         # TODO(akshayka): Smarter selection of initial iterate
-        iterate = options['initial_point'] if \
-            options.get('initial_point') is not None \
+        iterate = self._initial_point if \
+            self._initial_point is not None \
             else np.random.randn(problem.var_dim, 1) 
-        iterates = [iterate]
+        self.iterates = [iterate]
+        halfspaces = []
         self.errors = []
         for _ in xrange(self.max_iters):
-            prev_iterate = iterates[-1]
+            prev_iterate = self.iterates[-1]
 
             # If the target convex sets lived in a 2-dimensional space
             # and were oriented from left-to-right on the plane, we could
             # imagine that one of the sets was to the left of the other;
             # hence, the naming convention below.
-            left_point = project(prev_iterate, [cvx_sets[0]], cvx_var)
-            right_point = project(prev_iterate, [cvx_sets[1]], cvx_var)
+            left_point = utils.project(prev_iterate, cvx_sets[0], cvx_var)
+            right_point = utils.project(prev_iterate, cvx_sets[1], cvx_var)
 
             dist_set_one = np.linalg.norm(prev_iterate - left_point)
             dist_set_two = np.linalg.norm(prev_iterate - right_point)
             self.errors.append(dist_set_one + dist_set_two)
+            # TODO(akshayka): Termination criterion is incorrect;
+            # the "error" calculated here is the distance from the two
+            # sets, while it _should_ be the distance from the optimal
+            # solution / the intersection of the two sets ...
             if (self.errors[-1] < self.eps):
                 break
 
-            left_halfspace = self._containing_halfspace(prev_iterate,
-                left_point, cvx_var)
-            right_halfspace = self._containing_halfspace(prev_iterate,
-                right_point, cvx_var)
-            iterate = project(prev_iterate, left_halfspace + right_halfspace,
-                cvx_var)
-            iterates.append(iterate)
+            left_halfspace = right_halfspace = None
+            while left_halfspace is None and right_halfspace is None:
+                if random.random() <= self.include_probability:
+                    left_halfspace = self._containing_halfspace(
+                        prev_iterate=prev_iterate,
+                        point=left_point,
+                        cvx_var=cvx_var)
+                    halfspaces.append(left_halfspace)
+                if random.random() <= self.include_probability:
+                    right_halfspace = self._containing_halfspace(
+                        prev_iterate=prev_iterate,
+                        point=right_point,
+                        cvx_var=cvx_var)
+                    halfspaces.append(right_halfspace)
 
-#            if (np.allclose(prev_iterate, iterate)):
-#                break
-        return iterates
+            target_halfspaces = halfspaces
+            if self.discard_policy == 'evict':
+                halfspaces = halfspaces[-self.memory:]
+                target_halfspaces = halfspaces
+            iterate = utils.project(prev_iterate, target_halfspaces, cvx_var)
+            if self.momentum is not None:
+                iterate = utils.momentum_update(
+                    iterates=self.iterates, velocity=iterate-prev_iterate,
+                    alpha=self.momentum['alpha'],
+                    beta=self.momentum['beta'])
+            self.iterates.append(iterate)
+        return self.iterates[-1]
