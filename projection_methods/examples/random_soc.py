@@ -17,8 +17,6 @@ import pprint
 import tabulate
 import pdb
 
-CACHE_FILE = '.random_soc_cached'
-
 
 def solve(solver, problem, iters, label, table_data, dist_fig, delta_fig):
     opt = solver.solve(problem)
@@ -48,8 +46,12 @@ def solve(solver, problem, iters, label, table_data, dist_fig, delta_fig):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        '-l', '--load_cached_problem', action='store_true',
-        help='look for cached problem, create if none exists')
+        '-l', '--load_cached_problem', type=str,
+        help='name of cached file to create or load',
+        default=None)
+    parser.add_argument(
+        '-p', '--plot_file_pfx', type=str, required=True,
+        help='prefix of plot files to be generated')
     parser.add_argument(
         '-c', '--cones', nargs='+',
         default=[cones.ConeTypes.REALS, cones.ConeTypes.SOC],
@@ -105,9 +107,11 @@ def main():
         momentum_sfx = '(alpha: %f, beta: %f)' % (
             args['momentum'][0], args['momentum'][1])
 
-    if args['load_cached_problem'] and os.path.isfile(CACHE_FILE):
-        logging.info('loading cached problem ...')
-        pkl_file = open(CACHE_FILE, 'rb')
+    if (args['load_cached_problem'] is not None
+            and os.path.isfile(args['load_cached_problem'])):
+        logging.info(
+            'loading cached problem %s ...', args['load_cached_problem'])
+        pkl_file = open(args['load_cached_problem'], 'rb')
         cone, data, initial_point = cPickle.load(pkl_file)
         fp = cones.make_feasibility_problem(cone, sum(cone.dims), data)
         pkl_file.close()
@@ -116,8 +120,10 @@ def main():
         fp, data = cones.random_feasibility_problem(
             cone, affine_dim=args['affine_dim'])
         initial_point = np.random.randn(fp.var_dim, 1) 
-        if args['load_cached_problem']:
-            with open(CACHE_FILE, 'wb') as pkl_file:
+        if args['load_cached_problem'] is not None:
+            logging.info(
+                'caching problem as %s ...', args['load_cached_problem'])
+            with open(args['load_cached_problem'], 'wb') as pkl_file:
                 cPickle.dump((cone, data, initial_point), pkl_file)
 
     table_data = []
@@ -186,12 +192,12 @@ def main():
     plt.figure(dist_fig)
     plt.title('Distances from the intersection')
     plt.legend()
-    plt.savefig('random_soc_dist.png')
+    plt.savefig(args['plot_file_pfx'] + '_dists.png')
 
     plt.figure(delta_fig)
     plt.title('Deltas between iterates')
     plt.legend()
-    plt.savefig('random_soc_delta.png')
+    plt.savefig(args['plot_file_pfx'] + '_deltas.png')
 
 if __name__ == '__main__':
     main()

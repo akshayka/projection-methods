@@ -65,7 +65,7 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
     np_dist = np.linalg.norm(cvx_var.value - point, 2)
     assert np.isclose(cvx_dist, np_dist)
 
-    if not np.isclose(np_dist, opt_dist):
+    if not np.isclose(np_dist, opt_dist, atol=1e-3):
         logging.warning('opt_dist (%f) != np_dist (%f)', opt_dist, np_dist)
     else:
         logging.debug('opt_dist and np_dist agree')
@@ -73,7 +73,8 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
     if prob.status != cvx.OPTIMAL and prob.status != cvx.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
 
-    # TODO(akshayka): Return opt_dist?
+    # distances computed explicitly with numpy are more reliable than those
+    # computed by cvxpy
     return cvx_var.value, np_dist
 
 
