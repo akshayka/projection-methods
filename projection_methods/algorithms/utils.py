@@ -33,9 +33,8 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
     obj = cvx.Minimize(cvx.pnorm(cvx_var - point, 2))
     prob = cvx.Problem(obj, cvx_set)
 
-    # TODO(akshayka):
+    # ECOS sometimes fails at high tolerances
     #
-    # ECOS sometimes fails (must decrease tolerance)
     # SCS (indirect == True) sometimes returns values that are
     #  1. an order of magnitude different from the explicitly computed distance,
     #  2. and practically every value is somewhat different from the latter
@@ -54,18 +53,10 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
             opt_dist = prob.solve(
                 solver=cvx.ECOS, abstol=tol, reltol=tol, feastol=tol)
 
-    # TODO(akshayka): It appears that the solve function occasionally returns
-    # incorrect optimal objective function values. i.e., there exist cases
-    # when opt_dist != cvx.norm(cvx_var.value - point, 2)
-    #
-    # TODO(akshayka): Consider using np.linalg.norm instead
-    assert opt_dist == prob.value
-
-    cvx_dist = cvx.pnorm(cvx_var.value - point, 2).value
+    # numpy computes distances that are more accurate than those computed by
+    # cvxp
     np_dist = np.linalg.norm(cvx_var.value - point, 2)
-    assert np.isclose(cvx_dist, np_dist)
-
-    if not np.isclose(np_dist, opt_dist, atol=1e-3):
+    if not np.isclose(np_dist, opt_dist, atol=1e-2):
         logging.warning('opt_dist (%f) != np_dist (%f)', opt_dist, np_dist)
     else:
         logging.debug('opt_dist and np_dist agree')
@@ -74,9 +65,43 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
         logging.warning('problem status %s', prob.status)
 
     # distances computed explicitly with numpy are more reliable than those
-    # computed by cvxpy
+    # computed by cvxpy, so return the former
     return cvx_var.value, np_dist
 
+
+def plane_search(iterates, num_iterates, cvx_set, cvx_var):
+    """
+    Plane search on previous iterates when performing the projection.
+
+    This plane search does not preserve Fejer monotonicity!
+
+    Parameters
+    ----------
+    iterates : list-like (list-like (float))
+        List of the iterates belonging to a convex set, where iterates[i] is
+        the i-th iterate.
+    num_iterates : int
+        Use the num_iterates most recent iterates in the plane search
+    cvx_set : list
+        List of cvxpy constraints defining the convex set on which to project
+    cvx_var : cvxpy.Variable
+        cvxpy variable used in specifying cvx_set
+    """
+    num_iterates = min(len(iterates), num_iterates)
+    iterates = iterates[-num_iterates:]
+    theta = cvx.Variable(num_iterates)
+
+    # in the plane search, we seek a convex combination of the iterates
+    # that is close to a point in the other convex set
+    obj = cvx.Minimize(
+        cvx.pnorm(
+            sum([p * it for (p, it) in zip(theta, iterates)]) - cvx_var, 2))
+    constrs = cvx_set + [cvx.sum_entries(theta) == 1] + [theta >= 0] + [theta <= 1]
+    prob = cvx.Problem(obj, constrs)
+    prob.solve(solver=cvx.SCS, use_indirect=True)
+    opt_point = sum([p.value * it for (p, it) in zip(theta, iterates)])
+    np_dist = np.linalg.norm(opt_point - cvx_var.value, 2)
+    return opt_point, np_dist
 
 def momentum_update(iterates, velocity, alpha=0.8, beta=0.2):
     """

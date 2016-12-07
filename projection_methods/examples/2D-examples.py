@@ -11,6 +11,10 @@ import numpy as np
 parser = argparse.ArgumentParser()
 parser.add_argument('-l', help='lines', action='store_true')
 parser.add_argument('-c', help='circles', action='store_true')
+parser.add_argument(
+    '-ps', '--plane_search', type=int, default=1,
+    help='# iterates to include when performing a plane search on the '\
+         'affine set; 1 ==> no plane search')
 args = vars(parser.parse_args())
 
 
@@ -34,16 +38,24 @@ if args['l']:
     point = np.array([[0], [100]])
     cvx_sets = [[a.T * x == 0], [b.T * x == 0]]
     problem = FeasibilityProblem(cvx_sets=cvx_sets, cvx_var=x, var_dim=2)
-    options = {'initial_point': np.array([[0], [100]]), 'max_iters': 100}
+    initial_point = np.array([[0], [100]])
+    max_iters = 100
 
     plt.figure()
-    solver = AlternatingProjections()
-    solver.solve(problem, options)
+    solver = AlternatingProjections(
+        initial_point=initial_point, max_iters=max_iters,
+        plane_search=[args['plane_search'], 1])
+    solver.solve(problem)
     plot(solver.iterates, m)
+    plt.title('Alternating projections')
 
     plt.figure()
-    solver = QPSolver()
-    solver.solve(problem, options)
+    plt.plot([np.linalg.norm(x) for x in np.ediff1d(solver.iterates)])
+    plt.title('Alternating projections: sequence of normed residuals')
+
+    plt.figure()
+    solver = QPSolver(initial_point=initial_point, max_iters=max_iters)
+    solver.solve(problem)
     plot(solver.iterates, m)
     plt.show()
 

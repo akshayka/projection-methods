@@ -45,13 +45,24 @@ def solve(solver, problem, iters, label, table_data, dist_fig, delta_fig):
 
 def main():
     parser = argparse.ArgumentParser()
+    # --- input/output --- #
     parser.add_argument(
-        '-l', '--load_cached_problem', type=str,
-        help='name of cached file to create or load',
-        default=None)
+        '-l', '--load_cached_problem', type=str, default=None,
+        help='name of cached file to create or load')
     parser.add_argument(
-        '-p', '--plot_file_pfx', type=str, required=True,
+        '-p', '--plot_file_pfx', type=str, default=None,
         help='prefix of plot files to be generated')
+    parser.add_argument(
+        '-ll', '--log_level', type=str, default='INFO',
+        help='logging level (see the logging module for a list of valid levels')
+    # --- experiment parameters --- #
+    parser.add_argument(
+        '-i', '--max_iters', type=int, default=100,
+        help='maximum number of iterations to run each algorithm')
+    parser.add_argument(
+        '-s', '--step', type=int, default=10,
+        help='iteration step to use when tabulating, plotting')
+    # --- problem parameters --- #
     parser.add_argument(
         '-c', '--cones', nargs='+',
         default=[cones.ConeTypes.REALS, cones.ConeTypes.SOC],
@@ -62,34 +73,36 @@ def main():
     parser.add_argument(
         '-a', '--affine_dim', type=int, default=1000,
         help='dimension of matrix')
+    # --- the algorithms --- #
     parser.add_argument(
         '-ap', action='store_true', help='whether to run the AP solver')
     parser.add_argument(
         '-qp', action='store_true', help='whether to run the QP solver')
     parser.add_argument(
         '-dk', action='store_true', help='whether to run the Dykstra solver')
+    # --- options shared by solvers --- #
     parser.add_argument(
-        '-i', '--max_iters', type=int, default=100,
-        help='maximum number of iterations to run each algorithm')
-    parser.add_argument(
-        '-s', '--step', type=int, default=10,
-        help='iteration step to use when tabulating, plotting')
-    parser.add_argument(
-        '-mo', '--momentum', nargs=2, default=None,
+        '-mo', '--momentum', nargs=2, type=float, default=None,
         help='alpha and beta values for momentum, defaults to no momentum.')
+    # --- options for the AP solver --- #
+    parser.add_argument(
+        '-psa', '--plane_search_affine', nargs='+', type=int, default=[1],
+        help='# iterates to include when performing a plane search on the '\
+             'affine set; 1 ==> no plane search')
+    parser.add_argument(
+        '-psc', '--plane_search_cone', nargs='+', type=int, default=[1],
+        help='# iterates to include when performing a plane search on the '\
+             'convex cone; 1 ==> no plane search')
+    # --- options for the QP solver --- #
     parser.add_argument(
         '-dp', '--discard_policy', type=str, default='evict',
         help='discard policy for the QP solver')
     parser.add_argument(
-        '-ip', '--include_probability', nargs='+', type=float,
-        help='probability with which to include a halfpsace in the QP solver',
-        default=[1.0])
+        '-ip', '--include_probability', nargs='+', type=float, default=[1.0],
+        help='probability with which to include a halfpsace in the QP solver')
     parser.add_argument(
         '-m', '--memory', nargs='+', type=int, default=[2],
         help='list of memory lengths for qp')
-    parser.add_argument(
-        '-ll', '--log_level', type=str, default='INFO',
-        help='logging level (see the logging module for a list of valid levels')
 
     args = vars(parser.parse_args())
     logging.basicConfig(
@@ -136,10 +149,17 @@ def main():
 
     # evaluate AP
     if args['ap']:
-        logging.info('Solving with alternating projections ...')
         ap = AlternatingProjections(
             max_iters=args['max_iters'], initial_point=initial_point)
-        solve(ap, fp, iters, 'AP', table_data, dist_fig, delta_fig)
+        for psa in args['plane_search_affine']:
+            for psc in args['plane_search_cone']:
+                logging.info('Solving with alternating projections + '\
+                    'plane search (%d, %d) ...' % (psa, psc))
+                ap.plane_search[0] = psa
+                ap.plane_search[1] = psc
+                solve(
+                    ap, fp, iters, 'AP + plane search (%d, %d)' % (psa, psc),
+                    table_data, dist_fig, delta_fig)
 
         if args['momentum'] is not None:
             logging.info('Solving with alternating projections + momentum ...')
@@ -147,6 +167,7 @@ def main():
             solve(
                 ap, fp, iters, 'AP + momentum ' + momentum_sfx, table_data,
                 dist_fig, delta_fig)
+
 
     # evaluate QP
     if args['qp']:
@@ -166,7 +187,7 @@ def main():
                     logging.info( 
                         'Solving with QP, mem: %d, ip: %.2f, + momentum ...',
                         m, ip)
-                    qp.momentum = args['momentum']
+                    qp.momentum = momentum
                     solve(
                         qp, fp, iters,
                         'QP, mem (%d), ip (%.2f), %s' % (m, ip, momentum_sfx),
@@ -190,14 +211,20 @@ def main():
         table_data, headers=headers, tablefmt='grid')
 
     plt.figure(dist_fig)
-    plt.title('Distances from the intersection')
+    plt.title('Distance from the intersection')
     plt.legend()
-    plt.savefig(args['plot_file_pfx'] + '_dists.png')
+    if args['plot_file_pfx'] is not None:
+        plt.savefig(args['plot_file_pfx'] + '_dists.png')
+    else:
+        plt.show(dist_fig)
 
     plt.figure(delta_fig)
     plt.title('Deltas between iterates')
     plt.legend()
-    plt.savefig(args['plot_file_pfx'] + '_deltas.png')
+    if args['plot_file_pfx'] is not None:
+        plt.savefig(args['plot_file_pfx'] + '_deltas.png')
+    else:
+        plt.show(delta_fig)
 
 if __name__ == '__main__':
     main()
