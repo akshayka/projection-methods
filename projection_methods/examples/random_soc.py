@@ -242,6 +242,7 @@ def main():
     plt.figure(dist_fig)
     plt.title('Distance from the intersection')
     plt.legend()
+    plt.yscale('log')
     if args['plot_file_pfx'] is not None:
         plt.savefig(args['plot_file_pfx'] + '_dists.png')
     else:
@@ -251,6 +252,7 @@ def main():
     plt.figure(delta_fig)
     plt.title('Deltas between iterates')
     plt.legend()
+    plt.yscale('log')
     if args['plot_file_pfx'] is not None:
         plt.savefig(args['plot_file_pfx'] + '_deltas.png')
     else:
