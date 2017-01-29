@@ -39,7 +39,7 @@ class QPSolver(optimizer.Optimizer):
         cvx_sets = problem.cvx_sets
         cvx_var = problem.cvx_var
 
-        # TODO(akshayka): Smarter selection of initial iterate
+        # TODO(akshayka): Use row vectors, not column vectors
         iterate = self._initial_point if \
             self._initial_point is not None \
             else np.random.randn(problem.var_dim, 1)
@@ -93,7 +93,7 @@ class QPSolver(optimizer.Optimizer):
 
             # either project onto an outer approximation or take the
             # average of the left and right points
-            if len(target_halfspaces):
+            if len(target_halfspaces) > 0:
                 point_to_project = (prev_iterate if not self.average
                     else np.average([left_point, right_point], axis=0))
                 iterate = utils.project(point_to_project,
