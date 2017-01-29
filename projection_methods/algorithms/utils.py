@@ -105,7 +105,11 @@ def plane_search(iterates, num_iterates, cvx_set, cvx_var):
 
 def momentum_update(iterates, velocity, alpha=0.8, beta=0.2):
     """
-    Move with momentum to the next iterate subject to the velocity
+    Move with momentum to the next iterate:
+
+        x^{k+1} := x^k + \alpha * (P_{C}x^k - x^k) + \beta * (x^k - x^{k-1})
+
+    where (P_{C}x^k - x^k) is the velocity and (x^k - x^{k-1}) the momentum
 
     Parameters
     ----------
@@ -115,8 +119,13 @@ def momentum_update(iterates, velocity, alpha=0.8, beta=0.2):
         The velocity with which the current iterate should move:
             next_iterate - iterate, or gradient at iterates[-1]
         for example. An (imperfect) phyiscal interpretation is that, without
-        momentum the iterate's new position would be
-            iterates[-1] + time_step * velocity.
+        momentum, the iterate's new position would be
+            iterates[-1] + time_step * velocity, time_step == 1.
+    alpha : float
+        Weight to assign the velocity towards the nominal iterate
+    beta : float
+        Weight to assign the momentum from the previous iterate to the current
+        iterate
     Returns
     -------
     The next iterate : list-like (float)
@@ -124,5 +133,5 @@ def momentum_update(iterates, velocity, alpha=0.8, beta=0.2):
     if len(iterates) < 2:
         return iterates[-1] + velocity
     else:
-        momentum = iterates[-1] - iterates[-2]        
+        momentum = iterates[-1] - iterates[-2]
         return iterates[-1] + alpha * velocity + beta * momentum
