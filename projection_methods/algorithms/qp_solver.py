@@ -5,13 +5,14 @@ import numpy as np
 import random
 
 class QPSolver(optimizer.Optimizer):
-    DISCARD_POLICIES = frozenset(['evict']) 
+    DISCARD_POLICIES = frozenset(['evict'])
+
 
     def __init__(
             self, max_iters=100, eps=10e-5, initial_point=None,
             memory=2, discard_policy='evict', include_probability=1.0,
-            momentum=None, search_method=None,
-            boost_policy=None):
+            momentum=None, search_method=None, average=True):
+        """NB: search_method currently unused."""
         optimizer.Optimizer.__init__(self, max_iters, eps, initial_point)
         self.memory = memory
         if include_probability < 0 or include_probability > 1:
@@ -23,8 +24,8 @@ class QPSolver(optimizer.Optimizer):
                 str(QPSolver.DISCARD_POLICIES))
         self.discard_policy = discard_policy
         self.momentum = momentum
-        self.serach_method = search_method
-        self.boost_policy = boost_policy
+        self.search_method = search_method
+        self.average = average
 
 
     def _containing_halfspace(self, prev_iterate, point, cvx_var):
@@ -41,9 +42,9 @@ class QPSolver(optimizer.Optimizer):
         # TODO(akshayka): Smarter selection of initial iterate
         iterate = self._initial_point if \
             self._initial_point is not None \
-            else np.random.randn(problem.var_dim, 1) 
+            else np.random.randn(problem.var_dim, 1)
         self.iterates = [iterate]
-        halfspaces = []
+        self.halfspaces = []
         self.errors = []
         for _ in xrange(self.max_iters):
             prev_iterate = self.iterates[-1]
@@ -65,26 +66,41 @@ class QPSolver(optimizer.Optimizer):
             if (self.errors[-1] < self.eps):
                 break
 
-            left_halfspace = right_halfspace = None
-            while left_halfspace is None and right_halfspace is None:
+            if self.include_probability == 1:
+                self.halfspaces.append(self._containing_halfspace(
+                    prev_iterate=prev_iterate,
+                    point=left_point,
+                    cvx_var=cvx_var))
+                self.halfspaces.append(self._containing_halfspace(
+                    prev_iterate=prev_iterate,
+                    point=right_point,
+                    cvx_var=cvx_var))
+            else:
                 if random.random() <= self.include_probability:
-                    left_halfspace = self._containing_halfspace(
+                    self.halfspaces.append(self._containing_halfspace(
                         prev_iterate=prev_iterate,
                         point=left_point,
-                        cvx_var=cvx_var)
-                    halfspaces.append(left_halfspace)
+                        cvx_var=cvx_var))
                 if random.random() <= self.include_probability:
-                    right_halfspace = self._containing_halfspace(
+                    self.halfspaces.append(self._containing_halfspace(
                         prev_iterate=prev_iterate,
                         point=right_point,
-                        cvx_var=cvx_var)
-                    halfspaces.append(right_halfspace)
+                        cvx_var=cvx_var))
 
-            target_halfspaces = halfspaces
+            target_halfspaces = self.halfspaces
             if self.discard_policy == 'evict':
-                halfspaces = halfspaces[-self.memory:]
-                target_halfspaces = halfspaces
-            iterate = utils.project(prev_iterate, target_halfspaces, cvx_var)
+                target_halfspaces = self.halfspaces[-self.memory:]
+
+            # either project onto an outer approximation or take the
+            # average of the left and right points
+            if len(target_halfspaces):
+                point_to_project = (prev_iterate if not self.average
+                    else np.average([left_point, right_point], axis=0))
+                iterate = utils.project(point_to_project,
+                    target_halfspaces, cvx_var)
+            else:
+                iterate = np.average([left_point, right_point], axis=0)
+
             if self.momentum is not None:
                 iterate = utils.momentum_update(
                     iterates=self.iterates, velocity=iterate-prev_iterate,
