@@ -65,7 +65,7 @@ if args['c']:
     r = 10
     options = {}
     options['initial_point'] = np.array([[0], [r]])
-    options['max_iters'] = 10
+    options['max_iters'] = 100
     cvx_sets = [[cvx.square(x[0] - r) + cvx.square(x[1]) <= r**2],
                 [cvx.square(x[0] + r) + cvx.square(x[1]) <= r**2]]
     problem = FeasibilityProblem(cvx_sets=cvx_sets, cvx_var=x, var_dim=2)
@@ -89,12 +89,14 @@ if args['c']:
         )
 
     plot_circles(plt.figure())
-    solver = AlternatingProjections()
-    solver.solve(problem, options)
+    solver = AlternatingProjections(max_iters=options['max_iters'],
+        initial_point=options['initial_point'])
+    solver.solve(problem)
     plot(solver.iterates)
 
     plot_circles(plt.figure())
-    solver = QPSolver()
-    solver.solve(problem, options)
+    solver = QPSolver(max_iters=options['max_iters'],
+        initial_point=options['initial_point'], memory=2, average=False)
+    solver.solve(problem)
     plot(solver.iterates)
     plt.show()

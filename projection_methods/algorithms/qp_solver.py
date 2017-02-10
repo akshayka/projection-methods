@@ -81,7 +81,6 @@ class QPSolver(optimizer.Optimizer):
                         prev_iterate=prev_iterate,
                         point=left_point,
                         cvx_var=cvx_var))
-                if random.random() <= self.include_probability:
                     self.halfspaces.append(self._containing_halfspace(
                         prev_iterate=prev_iterate,
                         point=right_point,
