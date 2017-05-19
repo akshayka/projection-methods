@@ -79,9 +79,9 @@ class Polyhedron(Projectable):
             eviction_policy=Eviction.LRA):
         self._hyperplanes = []
         self._halfspaces = []
-        self.add(information)
         self.max_hyperplanes = max_hyperplanes
         self.max_halfspaces = max_halfspaces
+        self.add(information)
         self._eviction_policy = eviction_policy
         constr = [c for h in self._hyperplanes for c in h._constr]
         constr += [c for h in self._halfspaces for c in h._constr]
