@@ -53,20 +53,16 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
             opt_dist = prob.solve(
                 solver=cvx.ECOS, abstol=tol, reltol=tol, feastol=tol)
 
-    # numpy computes distances that are more accurate than those computed by
-    # cvxp
-    np_dist = np.linalg.norm(cvx_var.value - point, 2)
+    # TODO(akshayka): Ensure that this does not create side effects
+    x_star = np.array(cvx_var.value).flatten()
+    np_dist = np.linalg.norm(x_star - point, 2)
     if not np.isclose(np_dist, opt_dist, atol=1e-2):
         logging.warning('opt_dist (%f) != np_dist (%f)', opt_dist, np_dist)
-    else:
-        logging.debug('opt_dist and np_dist agree')
 
     if prob.status != cvx.OPTIMAL and prob.status != cvx.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
 
-    # distances computed explicitly with numpy are more reliable than those
-    # computed by cvxpy, so return the former
-    return cvx_var.value, np_dist
+    return x_star, opt_dist
 
 
 def plane_search(iterates, num_iterates, cvx_set, cvx_var):
