@@ -83,7 +83,3 @@ class Polyhedron(Projectable):
             # TODO(akshayka): implement eviction
             pass
         self._halfspaces.append(halfspace)
-
-
-
-
