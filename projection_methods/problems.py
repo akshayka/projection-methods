@@ -1,19 +1,36 @@
-"""
-Problem types.
-"""
+from projection_methods.oracles.convex_set import ConvexSet
 
 
 class FeasibilityProblem(object):
-    """Find point in affine_set \cap cone
+    """Description of a convex feasibility problem
 
-    attributes
-    ----------
+    Defines a convex feasibility problem, i.e.,
+        find x
+        s.t. x \in C_1 \cap C_2
+
+    Attributes:
+        sets (list of ConvexSet): the two convex sets defining the
+            feasibility problem
+        optimum (array-like): any point in the intersection of the sets
+        unique (boolean): whether the sets share exactly one point
     """
-    def __init__(self, cvx_sets, cvx_var, var_dim):
-        # TODO(akshayka): I will need to refactor everything to eliminate cvx_var
-        if len(cvx_sets) != 2:
+    def __init__(self, sets, optimum, unique=True):
+        """
+        Args:
+            sets (list of ConvexSet): the convex sets defining the
+            feasibility problem
+            optimum (array-like): any point in the intersection of the sets
+
+        Keyword Args:
+            unique (boolean): whether the sets share exactly one point
+                (default True)
+        """
+
+        if len(sets) != 2:
             raise ValueError('Feasibility problems must be cast as finding a '
                 'point in the intersection of _exactly_ two convex sets.')
-        self.cvx_sets = cvx_sets
-        self.cvx_var = cvx_var
-        self.var_dim = var_dim
+        assert isinstance(sets[0], ConvexSet)
+        assert isinstance(sets[1], ConvexSet)
+        self.sets = sets
+        self.optimum = optimum
+        self.unique = unique
