@@ -26,6 +26,16 @@ class Polyhedron(Projectable):
             max_hyperplanes=float("inf"),
             max_halfspaces=float("inf"),
             eviction_policy=Eviction.LRA):
+        """
+        Args:
+        x (cvxpy.Variable): a symbolic representation of
+            members of the set
+        information (list of Halfspace and/or Hyperplane): halfspaces and
+            hyperplanes defining polyhedron
+        max_hyperplanes: maximum hyperplane capacity
+        max_halfspaces: maximum halfspace capacity
+        eviction_policy: a member of Eviction
+        """
         self._hyperplanes = []
         self._halfspaces = []
         self.max_hyperplanes = max_hyperplanes
@@ -37,24 +47,28 @@ class Polyhedron(Projectable):
         super(Polyhedron, self).__init__(x, constr)
 
 
-    def add(self, items):
-        if type(items) is not list:
-            items = [items]
-        for item in items:
-            if type(item) == Hyperplane:
-                self._add_hyperplane(item)
-            elif type(item) == Halfspace:
-                self._add_halfspace(item)
+    def halfspaces(self): return self._halfspaces
+    def hyperplanes(self): return self._hyperplanes
+
+    def add(self, information):
+        """Add hyperplanes and halfspaces to polyhedron
+
+        Args:
+            information (list of Hyperplane and/or Halfspace): halfspaces and
+                hyperplanes to add to polyhedron
+        Raises:
+            ValueError if information contains an object that is not a
+                Hyperplane or a Halfspace
+        """
+        if type(information) is not list:
+            information = [information]
+        for info in information:
+            if type(info) == Hyperplane:
+                self._add_hyperplane(info)
+            elif type(info) == Halfspace:
+                self._add_halfspace(info)
             else:
                 raise ValueError, "Only Halfspaces or Hyperplanes can be added"
-
-
-    def halfspaces(self):
-        return self._halfspaces
-
-
-    def hyperplanes(self):
-        return self._hyperplanes
 
 
     def _add_hyperplane(self, hyperplane):
