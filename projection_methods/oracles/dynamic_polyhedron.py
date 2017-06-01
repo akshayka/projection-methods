@@ -11,7 +11,7 @@ class DynamicPolyhedron(Oracle):
     A DynamicPolyhedron mediates access to a Polyhedron by exposing a finite
     number of the hyperplanes and halfspaces defining it; the exposed
     hyperplanes and halfspaces are an outer approximation of the polyhedron.
-    Client's can select from a number of policies that determine the
+    Clients can select from a number of policies that determine the
     construction of the outer approximation.
 
     Unlike ConvexSet, DynamicPolyhedron does _not_ implement the Projectable
