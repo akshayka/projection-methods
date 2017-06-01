@@ -1,9 +1,15 @@
 from projection_methods.oracles.oracle import Oracle
-from projection_methods.projectables.projectable import Projectable, Halfspace
+from projection_methods.projectables.polyhedron import Polyhedron
+from projection_methods.projectables.projectable import Projectable
+from projection_methods.projectables.halfspace import Halfspace
 
 
 class ConvexSet(Projectable, Oracle):
     """A projectable oracle for convex sets"""
+    class Outer(object):
+        POLYHEDRAL, EXACT = range(2)
+
+
     def __init__(self, x, constr=[]):
         """
         Args:
@@ -41,19 +47,18 @@ class ConvexSet(Projectable, Oracle):
         return x_star, halfspace
 
 
-    def outer(self, kind=Oracle.Outer.POLYHEDRAL):
+    def outer(self, kind=Outer.POLYHEDRAL):
         """Returns outer approximation of set
 
         Args:
-            kind: a member of Oracle.Outer
+            kind: a member of ConvexSet.Outer
         Returns:
             Projectable: an outer approximation of the set
                 that implements Projectable
         """
-        Returns an outer approximation 
-        if kind == Oracle.Outer.POLYHEDRAL:
+        if kind == ConvexSet.Outer.POLYHEDRAL:
             return Polyhedron(self._x, self._halfspaces)
-        elif kind == Oracle.Outer.EXACT:
+        elif kind == ConvexSet.Outer.EXACT:
             return self
         else:
             raise(ValueError, "Unknown kind " + str(kind))

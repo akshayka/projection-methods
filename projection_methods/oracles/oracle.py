@@ -13,10 +13,7 @@ class Oracle:
     Note that an Oracle is an abstract interface.
     """
     __metaclass__ = abc.ABCMeta
-    class Outer(object):
-        POLYHEDRAL, EXACT = range(2)
 
-    
     @abc.abstractmethod
     def query(self, x_0):
         """At minimum, returns x_0 if x_0 \in set"""
@@ -24,6 +21,6 @@ class Oracle:
 
 
     @abc.abstractmethod
-    def outer(self, kind=Outer.POLYHEDRAL):
+    def outer(self, kind):
         """Returns an outer approximation of the set"""
         pass
