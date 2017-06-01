@@ -33,24 +33,28 @@ class CartesianProduct(ConvexSet):
 
 
     def query(x_0):
-        """As ConvexSet.query, but returns a list of Halfspaces
+        """As ConvexSet.query, but returns a list of Halfspaces/Hyperplanes
 
-        Computes a halfspace for each convex set C_i in the Cartesian product,
-        instead of a single halfspace for the entire set
+        Computes a halfspace/hyperplane for each convex set C_i in the
+        Cartesian product, instead of a single halfspace/hyperplanes for the
+        entire set
 
         Args:
             x_0 (array-like): query point
         Returns:
             array-like: the projection of x_0 onto the set
-            list of Halfspace: a list of halfspspaces such that, for every
-                point x in the Cartesian product, the i-th slice of x lies in
-                the i-th halfspace
+            list of Halfspace and/or Hyperplane: a list of
+                halfspspaces/hyperplanes such that, for every point x in the
+                Cartesian product, the i-th slice of x lies in the i-th
+                halfspace/hyperplane
         """
         x_star = np.zeros(x_0.shape)
-        halfspaces = []
+        hyper_half= []
         for s, dim in zip(self.sets, self.dims):
             x_s, h_s = s.query(x_0[dim])
             x_star[dim] = x_s
-            halfspaces.append(h_s)
-        self._halfspaces.extend(halfspaces)
-        return x_star, halfspaces
+            hyper_half.append(h_s)
+        # Note the lazy English below; self._halfspaces here may very well
+        # contain hyperplanes.
+        self._halfspaces.extend(hyper_half)
+        return x_star, hyper_half
