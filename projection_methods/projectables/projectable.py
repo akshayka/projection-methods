@@ -1,6 +1,6 @@
 import numpy as np
 
-import algorithms.utils
+import projection_methods.algorithms.utils import project
 
 
 class Projectable(object):
@@ -33,8 +33,7 @@ class Projectable(object):
         Returns:
             array-like: projection of x_0 onto set
         """
-        Returns:
-        x_star = algorithms.utils.project(x_0, self._constr, self._x)
+        x_star = project(x_0, self._constr, self._x)
         return x_star
 
 

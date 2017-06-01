@@ -1,3 +1,6 @@
+from projection_methods.projectables.projectable import Projectable
+
+
 class Polyhedron(Projectable):
     """A projectable polyhedron
 

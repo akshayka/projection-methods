@@ -1,5 +1,5 @@
-from oracles.oracle import Oracle
-from projectables.projectable import Projectable, Halfspace
+from projection_methods.oracles.oracle import Oracle
+from projection_methods.projectables.projectable import Projectable, Halfspace
 
 
 class ConvexSet(Projectable, Oracle):

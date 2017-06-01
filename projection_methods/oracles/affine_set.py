@@ -1,5 +1,5 @@
-from oracles.convex_set import ConvexSet
-from projectables.projectable import Hyperplane
+from projection_methods.oracles.convex_set import ConvexSet
+from projection_methods.projectables.projectable import Hyperplane
 
 class AffineSet(ConvexSet):
     """An oracle for affine sets

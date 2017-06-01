@@ -1,4 +1,4 @@
-from oracles.convex_set import ConvexSet
+from projection_methods.oracles.convex_set import ConvexSet
 
 
 class CartesianProduct(ConvexSet):
