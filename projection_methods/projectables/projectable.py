@@ -1,6 +1,6 @@
 import numpy as np
 
-import projection_methods.algorithms.utils import project
+from projection_methods.algorithms.utils import project
 
 
 class Projectable(object):
@@ -25,6 +25,11 @@ class Projectable(object):
                 (constrained._name, self._x._name))
 
 
+    def contains(self, x_0):
+        """Returns True if x_0 in set, False otherwise"""
+        return all(np.isclose(self._project(x_0), x_0, atol=1e-7))
+
+
     def project(self, x_0):
         """Project x_0 onto set
 
@@ -33,13 +38,14 @@ class Projectable(object):
         Returns:
             array-like: projection of x_0 onto set
         """
-        x_star = project(x_0, self._constr, self._x)
-        return x_star
+        if self.contains(x_0):
+            return x_0
+        else:
+            return self._project(x_0)
 
 
-    def contains(self, x_0):
-        """Returns True if x_0 in set, False otherwise"""
-        return all(np.isclose(self.project(x_0), x_0, atol=1e-3))
+    def _project(self, x_0):
+        return project(x_0, self._constr, self._x)
 
 
     def __repr__(self):
