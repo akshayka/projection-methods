@@ -11,15 +11,15 @@ class FeasibilityProblem(object):
     Attributes:
         sets (list of ConvexSet): the two convex sets defining the
             feasibility problem
-        optimum (array-like): any point in the intersection of the sets
+        x_opt (array-like): any point in the intersection of the sets
         unique (boolean): whether the sets share exactly one point
     """
-    def __init__(self, sets, optimum, unique=True):
+    def __init__(self, sets, x_opt, unique=True):
         """
         Args:
             sets (list of ConvexSet): the convex sets defining the
             feasibility problem
-            optimum (array-like): any point in the intersection of the sets
+            x_opt (array-like): any point in the intersection of the sets
 
         Keyword Args:
             unique (boolean): whether the sets share exactly one point
@@ -32,5 +32,5 @@ class FeasibilityProblem(object):
         assert isinstance(sets[0], ConvexSet)
         assert isinstance(sets[1], ConvexSet)
         self.sets = sets
-        self.optimum = optimum
+        self.x_opt = x_opt
         self.unique = unique
