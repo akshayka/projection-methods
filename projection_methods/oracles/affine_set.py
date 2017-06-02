@@ -11,7 +11,7 @@ class AffineSet(ConvexSet):
     Attributes:
         x (cvxpy.Variable): a symbolic representation of
             members of the set
-        A (numpy.ndarray): a matrix
+        A (numpy.ndarray or scipy.sparse matrix): a matrix
         b (numpy.ndarray): a target vector
     """
     def __init__(self, x, A, b):
