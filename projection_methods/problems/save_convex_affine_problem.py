@@ -6,7 +6,7 @@ import cvxpy
 
 from projection_methods.oracles.reals import Reals
 from projection_methods.oracles.zeros import Zeros
-from projection_methods.oracles.soc import SOC
+import projection_methods.oracles.soc as soc
 
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.problems.problem_factory import convex_affine_problem
@@ -15,7 +15,7 @@ from projection_methods.problems.problem_factory import convex_affine_problem
 REALS = 'R'
 ZEROS = 'Z'
 SEC_ORD_CONE = 'SOC'
-SETS = {REALS: Reals, ZEROS: Zeros, SEC_ORD_CONE: SOC}
+SETS = {REALS: Reals, ZEROS: Zeros, SEC_ORD_CONE: soc.SOC}
 
 def die_if(cond, msg):
     if cond:
@@ -33,8 +33,10 @@ die_if(path.is_file(), 'You are trying to overwrite an extant file; '
     'this is not allowed.')
 
 # Read in parameters to construct the convex set.
-dims = eval(raw_input('Please enter a list of dimensions (e.g., [1, 4, 2]): '))
-sets = eval(raw_input('Please enter a list of sets (e.g., [R, SOC, Z]): '))
+dims = raw_input('Please enter a list of dimensions (e.g., 1 4 2): ')
+dims = [int(d) for d in dims.split()]
+sets = raw_input('Please enter a list of sets (e.g., R SOC Z): ')
+sets = [s for s in sets.split()]
 die_if(len(dims) != len(sets), 'length of dims must equal length of sets')
 
 total_dim = sum(dims)
@@ -56,7 +58,7 @@ else:
 
 # Read in parameters to construct the affine set.
 shape = eval(raw_input(
-    'Please enter the shape of the data matrix A; e.g., (10, 10): ')
+    'Please enter the shape of the data matrix A; e.g., (10, 10): '))
 density = float(raw_input('Please enter the desired density of A '
     '(float in (0, 1]): '))
 
