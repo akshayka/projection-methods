@@ -8,26 +8,26 @@ from projection_methods.algorithms.apop import APOP
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
 
 
-ALTP = 'altp'
-APOP = 'apop'
-SOLVERS = frozenset([ALTP, APOP])
+k_alt_p = 'altp'
+k_apop = 'apop'
+k_solvers = frozenset([k_alt_p, k_apop])
 
-EXACT = 'exact'
-ELRA = 'elra'
-ERANDOM = 'erandom'
-SUBSAMPLE = 'subsample'
-OUTERS = {
-    EXACT: PolyOuter.EXACT,
-    ELRA: PolyOuter.ELRA,
-    ERANDOM: PolyOuter.ERANDOM,
-    SUBSAMPLE: PolyOuter.SUBSAMPLE
+k_exact = 'exact'
+k_elra = 'elra'
+k_erandom = 'erandom'
+k_subsample = 'subsample'
+k_outers = {
+    k_exact: PolyOuter.EXACT,
+    k_elra: PolyOuter.ELRA,
+    k_erandom: PolyOuter.ERANDOM,
+    k_subsample: PolyOuter.SUBSAMPLE,
 }
 
 
 def main():
     example =\
     """example usage:
-    python experiment.py sv/convex_affine/1000_square.pkl
+    python experiment.py problems/sv/convex_affine/1000_square.pkl
     results/convex_affine/1000_square/apop apop -n apop_exact -o exact"""
     parser = argparse.ArgumentParser(
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -49,15 +49,15 @@ def main():
     # --- algorithms --- #
     parser.add_argument(
         'solver', metavar='S', type=str, default='apop',
-        help='which solver to use; one of ' + str(list(SOLVERS)))
-    # --- options for APOP --- #
+        help='which solver to use; one of ' + str(list(k_solvers)))
+    # --- options for k_apop --- #
     parser.add_argument(
         '-alt', action='store_false', help=('use the alternating method '
-        'instead of the averaging one for APOP'))
+        'instead of the averaging one for k_apop'))
     parser.add_argument(
         '-o', '--outer', type=str, default='exact',
-        help=('outer approximation management policy for APOP; one of ' +
-        str(OUTERS.keys())))
+        help=('outer approximation management policy for k_apop; one of ' +
+        str(k_outers.keys())))
     parser.add_argument(
         '-mhyp', '--max_hyperplanes', type=int, default=None,
         help=('maximum number of hyperplanes allowed in the outer approx; '
@@ -82,7 +82,7 @@ def main():
     logging.basicConfig(
         format='[%(filename)s:%(lineno)s - %(funcName)20s() ] %(message)s',
         level=eval('logging.%s' % args['log_level']))
-    if not args['solver'] not in SOLVERS:
+    if args['solver'] not in k_solvers:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
     # Load in the problem
@@ -92,12 +92,12 @@ def main():
         problem = cPickle.load(pkl_file)
     
 
-    if args['solver'] == ALTP:
+    if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
             momentum=args['momentum'])
-    elif args['solver'] == APOP:
+    elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
-            outer_policy=OUTERS[args['outer']],
+            outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
             momentum=args['momentum'],
