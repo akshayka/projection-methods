@@ -12,19 +12,14 @@ class FeasibilityProblem(object):
         sets (list of ConvexSet): the two convex sets defining the
             feasibility problem
         x_opt (array-like): any point in the intersection of the sets
-        unique (boolean): whether the sets share exactly one point
         dimension (tuple): dimension of the space in which x lies
     """
-    def __init__(self, sets, x_opt, unique=True):
+    def __init__(self, sets, x_opt):
         """
         Args:
             sets (list of ConvexSet): the convex sets defining the
             feasibility problem
             x_opt (array-like): any point in the intersection of the sets
-
-        Keyword Args:
-            unique (boolean): whether the sets share exactly one point
-                (default True)
         """
 
         if len(sets) != 2:
@@ -35,4 +30,3 @@ class FeasibilityProblem(object):
         self.sets = sets
         self.x_opt = x_opt
         self.dimension = x_opt.shape
-        self.unique = unique
