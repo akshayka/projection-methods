@@ -47,8 +47,8 @@ class AffineSet(ConvexSet):
 
     def __repr__(self):
         string = type(self).__name__ + "\n"
-        string += "A: " + str(self.A) + "\n"
-        string += "b: " + str(self.b)
+        string += "A of shape %s\n" % str(self.A.shape)
+        string += "b of shape %s" % str(self.b.shape)
         return string
 
 
