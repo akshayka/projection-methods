@@ -37,7 +37,7 @@ class ConvexSet(Projectable, Oracle):
                 of x_0 onto the set
         """
         x_star = self.project(x_0)
-        if x_0 == x_star:
+        if (x_0 == x_star).all():
             return x_0, []
 
         a = x_0 - x_star

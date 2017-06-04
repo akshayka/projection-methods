@@ -27,7 +27,7 @@ class Projectable(object):
 
     def contains(self, x_0, atol=1e-4):
         """Returns True if x_0 in set, False otherwise"""
-        return all(np.isclose(self._project(x_0), x_0, atol=atol))
+        return np.isclose(self._project(x_0), x_0, atol=atol).all()
 
 
     def project(self, x_0):
