@@ -21,7 +21,7 @@ class SOC(ConvexSet):
 
 
     def _contains(self, norm_z, t, atol=1e-6):
-        return np.isclose(norm_z - t, 0, atol=atol).all()
+        return np.isclose(norm_z - t, 0, atol=atol)
 
     def contains(self, x_0, atol=1e-6):
         z = x_0[:-1]
