@@ -3,11 +3,11 @@ import numpy as np
 from projection_methods.algorithms.optimizer import Optimizer
 from projection_methods.algorithms.utils import heavy_ball_update
 
-class AvgP(optimizer.Optimizer):
+class AvgP(Optimizer):
     def __init__(self,
             max_iters=100, atol=10e-5, initial_iterate=None,
-            momentum=None)
-        super(AP, self).__init__(max_iters, atol, initial_iterate)
+            momentum=None):
+        super(AvgP, self).__init__(max_iters, atol, initial_iterate)
         self.momentum = momentum
 
 

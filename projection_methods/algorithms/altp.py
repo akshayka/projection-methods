@@ -3,11 +3,11 @@ import numpy as np
 from projection_methods.algorithms.optimizer import Optimizer
 from projection_methods.algorithms.utils import heavy_ball_update
 
-class AltP(optimizer.Optimizer):
+class AltP(Optimizer):
     def __init__(self,
             max_iters=100, atol=10e-5, initial_iterate=None,
-            momentum=None)
-        super(AP, self).__init__(max_iters, atol, initial_iterate)
+            momentum=None):
+        super(AltP, self).__init__(max_iters, atol, initial_iterate)
         self.momentum = momentum
 
 
@@ -15,7 +15,7 @@ class AltP(optimizer.Optimizer):
         """Returns tuple (dist from left set, dist from right set)"""
         return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
 
-    def _compute_residual_alt(self, x_k, y_k)
+    def _compute_residual_alt(self, x_k, y_k):
         """Returns dist(x_k, y_k)"""
         return np.linalg.norm(x_k - y_k, 2)
 
