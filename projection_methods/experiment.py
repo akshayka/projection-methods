@@ -1,6 +1,7 @@
 import argparse
 import cPickle
 import logging
+import os
 import time
 
 from projection_methods.algorithms.altp import AltP
@@ -91,6 +92,9 @@ def main():
     with open(args['problem'], 'rb') as pkl_file:
         problem = cPickle.load(pkl_file)
     
+    fn = '_'.join([args['output'], time.strftime("%Y%m%d-%H%M%S")]) + '.pkl'
+    if not os.access(os.path.dirname(fn), os.W_OK):
+        raise ValueError('Invalid output path %s' % fn)
 
     if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
@@ -109,7 +113,6 @@ def main():
     name = args['name'] if len(args['name']) > 0 else args['solver']
     data = {'it': it, 'res': res, 'status': status,
             'problem': args['problem'], 'name': name}
-    fn = '_'.join(args['output'], time.strftime("%Y%m%d-%H%M%S")) + '.pkl'
     with open(fn, 'wb') as f:
         cPickle.dump(data, f)
 

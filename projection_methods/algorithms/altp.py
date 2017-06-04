@@ -11,11 +11,7 @@ class AltP(Optimizer):
         self.momentum = momentum
 
 
-    def _compute_residual_avg(self, x_k, y_k, z_k):
-        """Returns tuple (dist from left set, dist from right set)"""
-        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
-
-    def _compute_residual_alt(self, x_k, y_k):
+    def _compute_residual(self, x_k, y_k):
         """Returns dist(x_k, y_k)"""
         return np.linalg.norm(x_k - y_k, 2)
 
@@ -33,7 +29,7 @@ class AltP(Optimizer):
 
         status = Optimizer.Status.INACCURATE
         for i in xrange(self.max_iters):
-            x_k = self.iterates[-1]
+            x_k = iterates[-1]
             y_k = right_set.project(x_k)
 
             residuals.append(self._compute_residual(x_k, y_k))

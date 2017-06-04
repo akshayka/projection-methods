@@ -29,7 +29,7 @@ class AvgP(Optimizer):
 
         status = Optimizer.Status.INACCURATE
         for i in xrange(self.max_iters):
-            x_k = self.iterates[-1]
+            x_k = iterates[-1]
             y_k = left_set.project(x_k)
             z_k = right_set.project(x_k)
 

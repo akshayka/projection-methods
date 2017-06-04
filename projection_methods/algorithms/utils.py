@@ -19,8 +19,8 @@ def project(x_0, cvx_set, cvx_var):
     -------
     The projection of x_0 onto cvx_set : list-like (float)
     """
-    value, _ = project_aux(x_0=x_0, cvx_set=cvx_set, cvx_var=cvx_var)
-    return value
+    x_star, _ = project_aux(x_0=x_0, cvx_set=cvx_set, cvx_var=cvx_var)
+    return x_star
 
 
 def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
@@ -51,8 +51,8 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
             reltol *= 10
             feastol *= 10
             logging.warning(
-                'ECOS failed with tol %f; retrying with tol %f', abstol / 10,
-                abstol)
+                'ECOS failed with tol %.1e; retrying with tol %.1e',
+                abstol / 10, abstol)
             opt_dist = prob.solve(solver=cvx.ECOS, abstol=abstol,
                 feastol=feastol, reltol=reltol)
 
