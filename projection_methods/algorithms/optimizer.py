@@ -12,7 +12,7 @@ class Optimizer(object):
 
 
     @abc.abstractmethod
-    def solve(self, problem, options={}):
+    def solve(self, problem):
         pass
 
 
