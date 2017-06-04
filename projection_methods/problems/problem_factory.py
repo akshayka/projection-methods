@@ -4,7 +4,7 @@ import scipy.sparse
 import scipy.sparse.linalg
 
 from projection_methods.oracles.affine_set import AffineSet
-from projection_methods.problems import FeasibilityProblem
+from projection_methods.problems.problems import FeasibilityProblem
 
 
 def scs_like_problem(cones, u_shape, v_shape):
