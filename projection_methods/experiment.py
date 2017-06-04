@@ -5,16 +5,33 @@ import time
 
 from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.apop import APOP
+from projection_methods.oracles.dynamic_polyhedron import PolyOuter
 
 
 ALTP = 'altp'
 APOP = 'apop'
 SOLVERS = frozenset([ALTP, APOP])
 
+EXACT = 'exact'
+ELRA = 'elra'
+ERANDOM = 'erandom'
+SUBSAMPLE = 'subsample'
+OUTERS = {
+    EXACT: PolyOuter.EXACT,
+    ELRA: PolyOuter.ELRA,
+    ERANDOM: PolyOuter.ERANDOM,
+    SUBSAMPLE: PolyOuter.SUBSAMPLE
+}
+
 
 def main():
+    example =\
+    """example usage:
+    python experiment.py sv/convex_affine/1000_square.pkl
+    results/convex_affine/1000_square/apop apop -n apop_exact -o exact"""
     parser = argparse.ArgumentParser(
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        description=example)
     # --- input/output --- #
     parser.add_argument(
         'problem', metavar='P', type=str, default=None,
@@ -39,7 +56,8 @@ def main():
         'instead of the averaging one for APOP'))
     parser.add_argument(
         '-o', '--outer', type=str, default='exact',
-        help='outer approximation management policy for APOP')
+        help=('outer approximation management policy for APOP; one of ' +
+        str(OUTERS.keys())))
     parser.add_argument(
         '-mhyp', '--max_hyperplanes', type=int, default=None,
         help=('maximum number of hyperplanes allowed in the outer approx; '
@@ -79,7 +97,7 @@ def main():
             momentum=args['momentum'])
     elif args['solver'] == APOP:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
-            outer_policy=OUTER_MAP[args['outer']],
+            outer_policy=OUTERS[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
             momentum=args['momentum'],
