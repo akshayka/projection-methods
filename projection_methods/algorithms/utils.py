@@ -2,13 +2,13 @@ import cvxpy as cvx
 import logging
 import numpy as np
 
-def project(point, cvx_set, cvx_var):
+def project(x_0, cvx_set, cvx_var):
     """ 
     Project onto a convex set.
 
     Parameters
     ----------
-    point : double
+    x_0 : double
         The point to project onto the provided set.
     cvx_set : list
         List of cvxpy constraints defining a convex set.
@@ -17,20 +17,21 @@ def project(point, cvx_set, cvx_var):
 
     Returns
     -------
-    The projection of point onto cvx_set : list-like (float)
+    The projection of x_0 onto cvx_set : list-like (float)
     """
-    value, _ = project_aux(point=point, cvx_set=cvx_set, cvx_var=cvx_var)
+    value, _ = project_aux(x_0=x_0, cvx_set=cvx_set, cvx_var=cvx_var)
     return value
 
 
-def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
+def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
+    abstol=1e-7, reltol=1e-6, feastol=1e-7):
     """Return the projection and the distance"""
     # If the projection is unconstrained, the projection is trivially
     # idempotent
     if cvx_set == []:
-        return point, 0
+        return x_0, 0
 
-    obj = cvx.Minimize(cvx.pnorm(cvx_var - point, 2))
+    obj = cvx.Minimize(cvx.pnorm(cvx_var - x_0, 2))
     prob = cvx.Problem(obj, cvx_set)
 
     # ECOS sometimes fails at high tolerances
@@ -43,26 +44,30 @@ def project_aux(point, cvx_set, cvx_var, solver=cvx.SCS, use_indirect=True):
         opt_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
     else:
         try:
-            tol = 1e-3
             opt_dist = prob.solve(
-                solver=cvx.ECOS, abstol=tol, reltol=tol, feastol=tol)
+                solver=cvx.ECOS, abstol=abstol, reltol=reltol, feastol=feastol)
         except cvx.error.SolverError:
-            tol *= 10
+            abstol *= 10
+            reltol *= 10
+            feastol *= 10
             logging.warning(
-                'ECOS failed with tol %f; retrying with tol %f', tol / 10, tol)
-            opt_dist = prob.solve(
-                solver=cvx.ECOS, abstol=tol, reltol=tol, feastol=tol)
+                'ECOS failed with tol %f; retrying with tol %f', abstol / 10,
+                abstol)
+            opt_dist = prob.solve(solver=cvx.ECOS, abstol=abstol,
+                feastol=feastol, reltol=reltol)
 
-    # TODO(akshayka): Ensure that this does not create side effects
     x_star = np.array(cvx_var.value).flatten()
-    np_dist = np.linalg.norm(x_star - point, 2)
-    if not np.isclose(np_dist, opt_dist, atol=1e-2):
+    np_dist = np.linalg.norm(x_star - x_0, 2)
+
+    if not np.isclose(obj.value, np_dist):
+        logging.warning('obj.value (%f) != np_dist (%f)', obj.value, np_dist)
+    if not np.isclose(np_dist, opt_dist, atol=1e-5):
         logging.warning('opt_dist (%f) != np_dist (%f)', opt_dist, np_dist)
 
     if prob.status != cvx.OPTIMAL and prob.status != cvx.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
 
-    return x_star, opt_dist
+    return x_star, np_dist
 
 
 def plane_search(iterates, num_iterates, cvx_set, cvx_var):
@@ -99,32 +104,31 @@ def plane_search(iterates, num_iterates, cvx_set, cvx_var):
     np_dist = np.linalg.norm(opt_point - cvx_var.value, 2)
     return opt_point, np_dist
 
-def momentum_update(iterates, velocity, alpha=0.8, beta=0.2):
-    """
+def heavy_ball_update(iterates, velocity, alpha=0.8, beta=0.2):
+    """Heavy-ball momentum
     Move with momentum to the next iterate:
 
         x^{k+1} := x^k + \alpha * (P_{C}x^k - x^k) + \beta * (x^k - x^{k-1})
 
     where (P_{C}x^k - x^k) is the velocity and (x^k - x^{k-1}) the momentum
 
-    Parameters
-    ----------
-    iterates : list-like (list-like (float))
-       List of all the iterates so far, where iterates[i] is the i-th iterate.
-    velocity : list-like (float)
-        The velocity with which the current iterate should move:
-            next_iterate - iterate, or gradient at iterates[-1]
-        for example. An (imperfect) phyiscal interpretation is that, without
-        momentum, the iterate's new position would be
-            iterates[-1] + time_step * velocity, time_step == 1.
-    alpha : float
-        Weight to assign the velocity towards the nominal iterate
-    beta : float
-        Weight to assign the momentum from the previous iterate to the current
-        iterate
-    Returns
-    -------
-    The next iterate : list-like (float)
+    Args:
+        iterates (list-like of float): list of all the iterates so far, where
+            iterates[i] is the i-th iterate.
+        velocity (list-like of float): the velocity with which the current
+            iterate should move:
+                next_iterate - iterate, or gradient at iterates[-1]
+            for example. An (imperfect) phyiscal interpretation is that,
+            without momentum, the iterate's new position would be
+                iterates[-1] + time_step * velocity, time_step == 1.
+        alpha (float): Weight to assign the velocity towards the nominal
+            iterate
+        beta: float
+            Weight to assign the momentum from the previous iterate to the
+            current iterate
+
+    Returns:
+        The next iterate : list-like (float)
     """
     if len(iterates) < 2:
         return iterates[-1] + velocity
