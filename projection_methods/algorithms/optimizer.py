@@ -1,10 +1,14 @@
 import abc
 
 class Optimizer(object):
-    def __init__(self, max_iters=100, eps=10e-5, initial_point=None):
+    class Status(object):
+        OPTIMAL, INACCURATE, INFEASIBLE = range(3)
+
+
+    def __init__(self, max_iters=100, atol=10e-5, initial_iterate=None):
         self._max_iters = max_iters
-        self._eps = eps
-        self._initial_point = initial_point
+        self._atol = atol
+        self._initial_iterate = initial_iterate
 
 
     @abc.abstractmethod
@@ -23,11 +27,11 @@ class Optimizer(object):
         self._max_iters = max_iters
 
     @property
-    def eps(self):
-        return self._eps
+    def atol(self):
+        return self._atol
 
-    @eps.setter
-    def eps(self, eps):
-        if eps < 0:
-            raise ValueError('eps must be >= 0')
-        self._eps = eps
+    @atol.setter
+    def atol(self, atol):
+        if atol < 0:
+            raise ValueError('atol must be >= 0')
+        self._atol = atol
