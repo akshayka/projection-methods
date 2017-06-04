@@ -10,23 +10,23 @@ class CartesianProduct(ConvexSet):
 
     Attributes:
         sets (list of ConvexSet): sets C_1, \ldots, C_n
-        dims (list of slice): if the Cartesian product lies in
-            R^d, then dims[i] is the slice of [0 ... d-1] that
+        slices (list of slice): if the Cartesian product lies in
+            R^d, then slices[i] is the slice of [0 ... d-1] that
             corresponds to C_i. For example, if n == 2 and
                 C_1 \subseteq R^10,
                 C_2 \subseteq R^20 (so d == 30),
             then
-                dims[0] == slice(0, 10) and
-                dims[1] == slice(10, 30).
+                slices[0] == slice(0, 10) and
+                slices[1] == slice(10, 30).
     """
-    def __init__(sets, dims):
+    def __init__(sets, slices):
         """
         Args:
             sets (list of ConvexSet): as per attribute
-            dims (list of slice): as per attribute
+            slices (list of slice): as per at atribute
         """
         self.sets = sets
-        self.dims = dims
+        self.slices = slices
         x = self.sets[0]._x
         constr = [c for s in sets for c in s._constr]
         super(CartesianProduct, self).__init__(x, constr)
@@ -50,9 +50,9 @@ class CartesianProduct(ConvexSet):
         """
         x_star = np.zeros(x_0.shape)
         hyper_half= []
-        for s, dim in zip(self.sets, self.dims):
-            x_s, h_s = s.query(x_0[dim])
-            x_star[dim] = x_s
+        for s, slx in zip(self.sets, self.slices):
+            x_s, h_s = s.query(x_0[slx])
+            x_star[slx] = x_s
             hyper_half.append(h_s)
         # Note the lazy English below; self._halfspaces here may very well
         # contain hyperplanes.
