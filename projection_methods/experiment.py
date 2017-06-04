@@ -13,7 +13,8 @@ SOLVERS = frozenset([ALTP, APOP])
 
 
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     # --- input/output --- #
     parser.add_argument(
         'problem', metavar='P', type=str, default=None,
@@ -21,32 +22,32 @@ def main():
     parser.add_argument(
         'output', metavar='O', type=str, default=None,
         help=('output path specifying location in which to save results; '
-        'note that a timestamp and solver name will be appended to the path')
+        'note that a timestamp will be appended to the path'))
     parser.add_argument(
         '-n', '--name', type=str, default='',
         help='descriptive name of experiment')
     parser.add_argument(
         '-ll', '--log_level', type=str, default='INFO',
-        help='logging level (see the logging module for a list of valid levels')
+        help='logging level (see the logging module for a list of levels)')
     # --- algorithms --- #
     parser.add_argument(
         'solver', metavar='S', type=str, default='apop',
-        help='which solver to use; one of ' + str(SOLVERS))
+        help='which solver to use; one of ' + str(list(SOLVERS)))
     # --- options for APOP --- #
     parser.add_argument(
         '-alt', action='store_false', help=('use the alternating method '
         'instead of the averaging one for APOP'))
     parser.add_argument(
         '-o', '--outer', type=str, default='exact',
-        help='outer approx. management policy for APOP')
+        help='outer approximation management policy for APOP')
     parser.add_argument(
         '-mhyp', '--max_hyperplanes', type=int, default=None,
         help=('maximum number of hyperplanes allowed in the outer approx; '
-        'defaults to unlimited.')
+        'defaults to unlimited.'))
     parser.add_argument(
         '-mhlf', '--max_halfspaces', type=int, default=None,
         help=('maximum number of halfspaces allowed in the outer approx; '
-        'defaults to unlimited.')
+        'defaults to unlimited.'))
     # --- options shared by at least two solvers --- #
     parser.add_argument(
         '-i', '--max_iters', type=int, default=100,
@@ -91,7 +92,7 @@ def main():
     data = {'it': it, 'res': res, 'status': status,
             'problem': args['problem'], 'name': name}
     fn = '_'.join(args['output'], time.strftime("%Y%m%d-%H%M%S")) + '.pkl'
-    with open fn as f:
+    with open(fn, 'wb') as f:
         cPickle.dump(data, f)
 
 
