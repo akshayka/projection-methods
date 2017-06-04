@@ -23,6 +23,9 @@ def main():
         help=('output path specifying location in which to save results; '
         'note that a timestamp and solver name will be appended to the path')
     parser.add_argument(
+        '-n', '--name', type=str, default='',
+        help='descriptive name of experiment')
+    parser.add_argument(
         '-ll', '--log_level', type=str, default='INFO',
         help='logging level (see the logging module for a list of valid levels')
     # --- algorithms --- #
@@ -84,12 +87,13 @@ def main():
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
     it, res, status = solver.solve(problem)
-    data = {'it': it, 'res': res, 'status': status}
-    fn = '_'.join(args['output'],
-        time.strftime("%Y%m%d-%H%M%S"),
-        args['solver']) + '.pkl'
+    name = args['name'] if len(args['name']) > 0 else args['solver']
+    data = {'it': it, 'res': res, 'status': status,
+            'problem': args['problem'], 'name': name}
+    fn = '_'.join(args['output'], time.strftime("%Y%m%d-%H%M%S")) + '.pkl'
     with open fn as f:
         cPickle.dump(data, f)
+
 
 if __name__ == '__main__':
     main()
