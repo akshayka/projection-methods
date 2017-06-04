@@ -1,7 +1,9 @@
 import cvxpy as cvx
 import numpy as np
 import scipy.sparse
+import scipy.sparse.linalg
 
+from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.problems import FeasibilityProblem
 
 
@@ -27,8 +29,8 @@ def scs_like_problem(cones, u_shape, v_shape):
     Returns:
         FeasibilityProblem: an SCS-like problem
     """
-        # TODO(akshayka): Implement this.
-        pass
+    # TODO(akshayka): Implement this.
+    pass
         
        
 def convex_affine_problem(convex_set, shape, density=0.01):
@@ -61,10 +63,10 @@ def convex_affine_problem(convex_set, shape, density=0.01):
             and sets[1] := the generated affine set (an instance of AffineSet)
     """
     
-    x_0 = np.random.uniform(-1, 1, size=(var_dim,1))
+    x_0 = np.random.uniform(-1, 1, size=shape[0])
     x_opt = convex_set.project(x_0)
 
-    A = sp.sparse.rand(m=shape[0], n=shape[1], density=density, format='csc')
+    A = scipy.sparse.rand(m=shape[0], n=shape[1], density=density, format='csc')
     # TODO(akshayka): assert that matrix is full rank
     #
     # the most efficient and convenient way to do this (that I know of) is
@@ -75,11 +77,14 @@ def convex_affine_problem(convex_set, shape, density=0.01):
     # if a RuntimeError is raised, then it is likely that the matrix is
     # singular; however, if a RuntimeError is not raised, this does not mean
     # that the matrix is nonsingular.
+    #
+    # Actually, it's probably totally fine if this matrix is singular.
     try:
-        e = scipy.sparse.linalgs.eigs(A, k=1, sigma=0, which='LM', maxiter=1)[0]
-        assert e > 0
+        e = scipy.sparse.linalg.eigs(A, k=1, sigma=0, which='LM', maxiter=1)[0]
+        # assert e != 0 [does not handle negative eigenvalues]
     except RuntimeError as e:
-        print "Error in checking matrix rank: " + str(e)
+        if "singular" in str(e):
+            print "Error in checking matrix rank: " + str(e)
     b = A.dot(x_opt)
         
     return FeasibilityProblem([convex_set, AffineSet(convex_set._x, A, b)],

@@ -13,6 +13,7 @@ class FeasibilityProblem(object):
             feasibility problem
         x_opt (array-like): any point in the intersection of the sets
         unique (boolean): whether the sets share exactly one point
+        dimension (tuple): dimension of the space in which x lies
     """
     def __init__(self, sets, x_opt, unique=True):
         """
@@ -33,4 +34,5 @@ class FeasibilityProblem(object):
         assert isinstance(sets[1], ConvexSet)
         self.sets = sets
         self.x_opt = x_opt
+        self.dimension = x_opt.shape
         self.unique = unique
