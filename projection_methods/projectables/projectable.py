@@ -25,9 +25,9 @@ class Projectable(object):
                 (constrained._name, self._x._name))
 
 
-    def contains(self, x_0):
+    def contains(self, x_0, atol=1e-4):
         """Returns True if x_0 in set, False otherwise"""
-        return all(np.isclose(self._project(x_0), x_0, atol=1e-7))
+        return all(np.isclose(self._project(x_0), x_0, atol=atol))
 
 
     def project(self, x_0):
