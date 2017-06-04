@@ -20,7 +20,7 @@ class APOP(Optimizer):
     def __init__(self,
             max_iters=100, atol=10e-5, initial_iterate=None,
             outer_policy=PolyOuter.EXACT,
-            max_hyperplanes=float("inf"), max_halfspaces=float("inf"),
+            max_hyperplanes=None, max_halfspaces=None,
             momentum=None, average=True):
         super(APOP, self).__init__(max_iters, atol, initial_iterate)
         if outer_policy not in PolyOuter.POLICIES:
@@ -28,8 +28,10 @@ class APOP(Optimizer):
                 'Policy must be chosen from ' +
                 str(PolyOuter.DISCARD_POLICIES))
         self.outer_policy = outer_policy
-        self.max_hyperplanes = max_hyperplanes
-        self.max_halfspaces = max_halfspaces
+        self.max_hyperplanes = (max_hyperplanes if max_hyperplanes is not None
+            else float('inf'))
+        self.max_halfspaces = (max_halfspaces if max_halfspaces is not None
+            else float('inf'))
         self.momentum = momentum
         self.average = average
 
