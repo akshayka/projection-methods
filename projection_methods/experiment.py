@@ -12,16 +12,6 @@ APOP = 'apop'
 SOLVERS = frozenset([ALTP, APOP])
 
 
-def momentum_fmt(momentum_list, idx):
-    momentum = {
-        'alpha' : momentum_list[idx],
-        'beta' : momentum_list[idx+1]
-    }
-    momentum_sfx = '(alpha: %.2f, beta: %.2f)' % (
-        momentum['alpha'], momentum['beta'])
-    return momentum, momentum_sfx
-
-
 def main():
     parser = argparse.ArgumentParser()
     # --- input/output --- #
