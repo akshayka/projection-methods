@@ -5,6 +5,25 @@ from projection_methods.projectables.polyhedron import Polyhedron
 from projection_methods.projectables.projectable import Projectable
 
 
+class PolyOuter(object):
+    """Management policies for halfspaces/hyperplanes
+
+    EXACT: Renders the oracle a dummy wrapper for its
+        polyhedron
+    ELRA: Evict least recently added
+    ERANDOM: Evict random candidate
+    SUBSAMPLE: Expose a random subsample of the hyperplanes/halfspaces
+        such that, in expectation, max_hyperplanes / max_halfspace
+        hyperplanes/halfspaces are exposed in each call to outer
+
+    TODO(akshayka):
+        add EMRA: evict most recently added (weird idea)
+    """
+    EXACT, ELRA, ERANDOM, SUBSAMPLE = range(4)
+    POLICIES = frozenset([EXACT, ELRA, ERANDOM, SUBSAMPLE])
+    EVICTIONS = frozenset([ELRA, ERANDOM])
+
+
 class DynamicPolyhedron(Oracle):
     """Dynamic manager for a Polyhedron
 
@@ -23,27 +42,8 @@ class DynamicPolyhedron(Oracle):
         max_halfspaces: maximum number of halfspaces (default infinite)
         policy: policy by which to construct outer approximations
     """
-    class Outer(object):
-        """Management policies for halfspaces/hyperplanes
-
-        EXACT: Renders the oracle a dummy wrapper for its
-            polyhedron
-        ELRA: Evict least recently added
-        ERANDOM: Evict random candidate
-        SUBSAMPLE: Expose a random subsample of the hyperplanes/halfspaces
-            such that, in expectation, max_hyperplanes / max_halfspace
-            hyperplanes/halfspaces are exposed in each call to outer
-
-        TODO(akshayka):
-            add EMRA: evict most recently added (weird idea)
-        """
-        EXACT, ELRA, ERANDOM, SUBSAMPLE = range(4)
-        POLICIES = frozenset([EXACT, ELRA, ERANDOM, SUBSAMPLE])
-        EVICTIONS = frozenset([ELRA, ERANDOM])
-
-
     def __init__(self, polyhedron, max_hyperplanes=float("inf"),
-            max_halfspaces=float("inf"), policy=DynamicPolyhedron.Outer.ELRA):
+            max_halfspaces=float("inf"), policy=PolyOuter.EXACT):
         """
         Args:
         x (cvxpy.Variable): a symbolic representation of
@@ -52,7 +52,7 @@ class DynamicPolyhedron(Oracle):
             hyperplanes defining polyhedron
         max_hyperplanes: maximum hyperplanes exposed
         max_halfspaces: maximum halfspaces exposed
-        policy: a member of Outer
+        policy: a member of PolyOuter
         """
         self._polyhedron = polyhedron
         self._outer_hyperplanes = []
@@ -60,8 +60,8 @@ class DynamicPolyhedron(Oracle):
         self.max_hyperplanes = max_hyperplanes
         self.max_halfspaces = max_halfspaces
 
-        assert policy in DynamicPolyhedron.Outer.POLICIES
-        if policy == DynamicPolyhedron.Outer.EXACT:
+        assert policy in PolyOuter.POLICIES
+        if policy == PolyOuter.EXACT:
             assert self.max_hyperplanes == float("inf")
             assert self.max_halfspaces == float("inf")
         self.policy = policy
@@ -84,6 +84,10 @@ class DynamicPolyhedron(Oracle):
                 self._add_hyperplane(info)
             elif type(info) == Halfspace:
                 self._add_halfspace(info)
+            elif info == []:
+                # TODO(akshayka): this is hacky -- an empty list means
+                # zero information
+                continue
             else:
                 raise ValueError, "Only Halfspaces or Hyperplanes can be added"
 
@@ -116,13 +120,13 @@ class DynamicPolyhedron(Oracle):
         Returns:
             Polyhedron: the outer approximation
         """
-        if (self.policy == DynamicPolyhedron.Outer.EXACT or (
+        if (self.policy == PolyOuter.EXACT or (
             len(self._polyhedron.hyperplanes()) <= self.max_hyperplanes and
             len(self._polyhedron.halfspaces()) <= self.max_halfspaces)):
             return self._polyhedron
         else:
             # eviction policies maintain outer as information is added
-            if self.policy == DynamicPolyhedron.Outer.SUBSAMPLE:
+            if self.policy == PolyOuter.SUBSAMPLE:
                 if len(self._polyhedron.hyperplanes()) > self.max_hyperplanes:
                     self._outer_hyperplanes = np.random.choice(
                         self._polyhedron.hyperplanes(),
@@ -136,10 +140,10 @@ class DynamicPolyhedron(Oracle):
 
 
     def _evict(self, items, new_item, max_len):
-        if self.policy == DynamicPolyhedron.Outer.ELRA:
+        if self.policy == PolyOuter.ELRA:
             items = items + [new_item]
             return items[-max_len:]
-        elif self.policy == DynamicPolyhedron.Outer.ERANDOM:
+        elif self.policy == PolyOuter.ERANDOM:
             evict_index = random.randint(0, max_len - 1)
             return items[0:evict_index] + items[evict_index + 1:] + [new_item]
         else:
@@ -148,7 +152,7 @@ class DynamicPolyhedron(Oracle):
 
     def _add_hyperplane(self, hyperplane):
         if (len(self._outer_hyperplanes) >= self.max_hyperplanes and
-                self.policy in DynamicPolyhedron.Outer.EVICTIONS):
+                self.policy in PolyOuter.EVICTIONS):
             self._outer_hyperplanes = self._evict(self._outer_hyperplanes,
                 hyperplane, self.max_hyperplanes)
         else:

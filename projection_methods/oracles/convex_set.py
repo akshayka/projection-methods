@@ -4,13 +4,12 @@ from projection_methods.projectables.projectable import Projectable
 from projection_methods.projectables.halfspace import Halfspace
 
 
+class ConvexOuter(object):
+    POLYHEDRAL, EXACT = range(2)
+
 class ConvexSet(Projectable, Oracle):
     """A projectable oracle for convex sets"""
-    class Outer(object):
-        POLYHEDRAL, EXACT = range(2)
-
-
-    def __init__(self, x, constr=[]):
+    def __init__(self, x, constr=[], t=ConvexOuter.EXACT):
         """
         Args:
             x (cvxpy.Variable): a symbolic representation of
@@ -37,9 +36,10 @@ class ConvexSet(Projectable, Oracle):
                 by the supporting hyperplane at the projection
                 of x_0 onto the set
         """
-        if self.contains(x_0):
-            return x_0, []
         x_star = self.project(x_0)
+        if x_0 == x_star:
+            return x_0, []
+
         a = x_0 - x_star
         b = a.dot(x_star)
         halfspace = Halfspace(x=self._x , a=a, b=b) 
@@ -47,18 +47,18 @@ class ConvexSet(Projectable, Oracle):
         return x_star, halfspace
 
 
-    def outer(self, kind=Outer.POLYHEDRAL):
+    def outer(self, kind=ConvexOuter.POLYHEDRAL):
         """Returns outer approximation of set
 
         Args:
-            kind: a member of ConvexSet.Outer
+            kind: a member of ConvexOuter
         Returns:
             Projectable: an outer approximation of the set
                 that implements Projectable
         """
-        if kind == ConvexSet.Outer.POLYHEDRAL:
+        if kind == ConvexOuter.POLYHEDRAL:
             return Polyhedron(self._x, self._halfspaces)
-        elif kind == ConvexSet.Outer.EXACT:
+        elif kind == CovnexOuter.EXACT:
             return self
         else:
             raise(ValueError, "Unknown kind " + str(kind))
