@@ -32,13 +32,17 @@ class APOP(Optimizer):
         self.max_halfspaces = max_halfspaces
         self.momentum = momentum
         self.average = average
-        self.iterates = []
-        self.residuals = []
 
 
-    def _compute_residual(self, x_k, y_k, z_k):
+    def _compute_residual_aux(self, x_k, y_k, z_k):
         """Returns tuple (dist from left set, dist from right set)"""
         return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
+
+    def _compute_residual(self, x_k, left_set, right_set):
+        """Returns tuple (dist from left set, dist from right set)"""
+        y_k, _ = left_set.query(x_k)
+        z_k, _ = right_set.query(x_k)
+        return self._compute_residual_aux(x_k, y_k, z_k)
 
     def _is_optimal(self, r_k):
         return r_k[0] <= self.atol and r_k[1] <= self.atol
@@ -62,30 +66,30 @@ class APOP(Optimizer):
         # must avoid convergence to zero.
         iterate = (self._initial_iterate if
             self._initial_iterate is not None else np.ones(problem.dimension))
-        self.iterates = [iterate]
+        iterates = [iterate]
+        residuals = []
 
         status = Optimizer.Status.INACCURATE
         for _ in xrange(self.max_iters):
-            print "iteration %d" % _
-            x_k = self.iterates[-1]
+            x_k = iterates[-1]
             y_k, y_h_k = left_set.query(x_k)
             z_k, z_h_k = right_set.query(x_k)
-            self.residuals.append(self._compute_residual(x_k, y_k, z_k))
-            if self._is_optimal(self.residuals[-1]):
+            residuals.append(self._compute_residual_aux(x_k, y_k, z_k))
+            if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 break
 
             self.outer_manager.add([y_h_k, z_h_k])
             if self.average:
-                x_k_plus = self.outer_manager.outer().project((y_k + z_k) / 2.0)
+                x_k_plus = self.outer_manager.outer().project(0.5 * (y_k + z_k))
             else:
                 x_k_plus = self.outer_manager.outer().project(x_k)
 
             if self.momentum is not None:
-                iterate = momentum_update(
-                    iterates=self.iterates, velocity=x_k_plus-x_k,
+                iterate = heavy_ball_update(
+                    iterates=iterates, velocity=x_k_plus-x_k,
                     alpha=self.momentum['alpha'],
                     beta=self.momentum['beta'])
-            self.iterates.append(x_k_plus)
+            iterates.append(x_k_plus)
 
-        return self.iterates, self.residuals, status
+        return iterates, residuals, status
