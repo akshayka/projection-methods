@@ -1,0 +1,15 @@
+- implement save_problem [Done]
+- write plotting code [Done!]
+- write shell scripts, run experiments, modify algorithms -- rinse and repeat!
+
+- investigate: why is convergence so fast (1 iteration!) when we start with ones?
+- cook up harder problems (convergence should not happen after one iteration!)
+- implement SCS problem in problem_factory
+- *** what is a correct way to measure residuals for all three algorithms? ***
+----- the sum of the distances from the iterate to both the left and right sets
+      feels very suboptimal. For example, if the two sets were hyperplanes that
+      were almost parallel, then this sum could be very small even when the
+      iterate were very far from the intersection of the two hyperplanes.
+- *** why does apop_exact diverge after a certain number of iterations? ***
+----- could it be numerical instability? for example, a halfspace is added that
+      takes the iterates way out of the optimal set?
