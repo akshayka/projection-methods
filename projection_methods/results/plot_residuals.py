@@ -3,7 +3,10 @@ import cPickle
 from glob import glob
 from pathlib2 import PosixPath
 
+import matplotlib.pyplot as plt
 from mpldatacursor import datacursor
+
+from projection_methods.experiment import k_apop
 
 def main():
     parser = argparse.ArgumentParser()
@@ -15,7 +18,7 @@ def main():
     parser.add_argument(
         '-o', '--output', type=str, default=None,
         help=('output filename of plot (w/o extension); if None, plot is '
-        'shown but not saved.')
+        'shown but not saved.'))
     # --- plot settings --- #
     parser.add_argument(
         '-t', '--title', type=str, default='Residuals for feasibility problem.',
@@ -36,13 +39,21 @@ def main():
             data.append(cPickle.load(f))
 
     plt.figure() 
+    max_its = 0
     for d in data:
         res = d['res']
+        if d['solver'] == k_apop:
+            res = [sum(r) for r in res]
+        if 0 in res:
+            res = [r + 1e-20 for r in res]
         it = range(len(res))
+        if len(res) > max_its:
+            max_its = len(res)
         plt.plot(it, res, '-o', label=d['name'])
+    plt.semilogy()
+    plt.xticks(range(0, max_its+1, 1))
     plt.title(args['title']) 
     plt.legend()
-    plt.yscale('log')
 
     if args['output'] is not None:
         plt.savefig(output_path.name)
