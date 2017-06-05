@@ -32,7 +32,7 @@ class ConvexSet(Projectable, Oracle):
             x_0 (array-like): query point
         Returns:
             array-like: the projection of x_0 onto the set
-            Halfspace: a halfspace containing the set, defined
+            list of Halfspace: a halfspace containing the set, defined
                 by the supporting hyperplane at the projection
                 of x_0 onto the set
         """
@@ -44,7 +44,7 @@ class ConvexSet(Projectable, Oracle):
         b = a.dot(x_star)
         halfspace = Halfspace(x=self._x , a=a, b=b) 
         self._halfspaces.append(halfspace)
-        return x_star, halfspace
+        return x_star, [halfspace]
 
 
     def outer(self, kind=ConvexOuter.POLYHEDRAL):

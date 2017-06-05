@@ -84,10 +84,6 @@ class DynamicPolyhedron(Oracle):
                 self._add_hyperplane(info)
             elif type(info) == Halfspace:
                 self._add_halfspace(info)
-            elif info == []:
-                # TODO(akshayka): this is hacky -- an empty list means
-                # zero information
-                continue
             else:
                 raise ValueError, "Only Halfspaces or Hyperplanes can be added"
 

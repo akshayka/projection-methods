@@ -81,7 +81,7 @@ class APOP(Optimizer):
                 status = Optimizer.Status.OPTIMAL
                 break
 
-            self.outer_manager.add([y_h_k, z_h_k])
+            self.outer_manager.add(y_h_k + z_h_k)
             if self.average:
                 x_k_plus = self.outer_manager.outer().project(0.5 * (y_k + z_k))
             else:

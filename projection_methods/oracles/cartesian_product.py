@@ -1,3 +1,5 @@
+import numpy as np
+
 from projection_methods.oracles.convex_set import ConvexSet
 
 
@@ -19,7 +21,7 @@ class CartesianProduct(ConvexSet):
                 slices[0] == slice(0, 10) and
                 slices[1] == slice(10, 30).
     """
-    def __init__(sets, slices):
+    def __init__(self, sets, slices):
         """
         Args:
             sets (list of ConvexSet): as per attribute
@@ -27,12 +29,12 @@ class CartesianProduct(ConvexSet):
         """
         self.sets = sets
         self.slices = slices
-        x = self.sets[0]._x
+        x = self.sets[0]._var
         constr = [c for s in sets for c in s._constr]
         super(CartesianProduct, self).__init__(x, constr)
 
 
-    def query(x_0):
+    def query(self, x_0):
         """As ConvexSet.query, but returns a list of Halfspaces/Hyperplanes
 
         Computes a halfspace/hyperplane for each convex set C_i in the
@@ -53,7 +55,7 @@ class CartesianProduct(ConvexSet):
         for s, slx in zip(self.sets, self.slices):
             x_s, h_s = s.query(x_0[slx])
             x_star[slx] = x_s
-            hyper_half.append(h_s)
+            hyper_half.extend(h_s)
         # Note the lazy English below; self._halfspaces here may very well
         # contain hyperplanes.
         self._halfspaces.extend(hyper_half)

@@ -35,7 +35,7 @@ class AffineSet(ConvexSet):
             x_0 (array-like): query point
         Returns:
             array-like: the projection of x_0 onto the set
-            Hyperplane: a hyperplane of the form <a, x> = b
+            list of Hyperplane: a hyperplane of the form <a, x> = b
                 in which every point x in the affine set must lie
         """
         x_star = self.project(x_0)
@@ -43,12 +43,12 @@ class AffineSet(ConvexSet):
         b = a.dot(x_star)
         hyperplane = Hyperplane(x=self._x , a=a, b=b) 
         self._hyperplanes.append(hyperplane)
-        return x_star, hyperplane
+        return x_star, [hyperplane]
 
     def __repr__(self):
-        string = type(self).__name__ + "\n"
-        string += "A of shape %s\n" % str(self.A.shape)
-        string += "b of shape %s" % str(self.b.shape)
+        string = type(self).__name__ + '\n'
+        string += 'A of shape %s\n' % str(self.A.shape)
+        string += 'b of shape %s' % str(self.b.shape)
         return string
 
 
