@@ -50,8 +50,9 @@ class Polyhedron(Projectable):
         for info in information:
             if type(info) == Hyperplane:
                 self._hyperplanes.append(info)
+                self._constr += [c for c in info._constr]
             elif type(info) == Halfspace:
                 self._halfspaces.append(info)
+                self._constr += [c for c in info._constr]
             else:
                 raise ValueError, "Only Halfspaces or Hyperplanes can be added"
-        self._constr += [c for h in information for c in h._constr]
