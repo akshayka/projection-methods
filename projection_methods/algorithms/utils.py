@@ -43,18 +43,18 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
     if solver == cvx.SCS:
         opt_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
     else:
-        try:
-            opt_dist = prob.solve(
-                solver=cvx.ECOS, abstol=abstol, reltol=reltol, feastol=feastol)
-        except cvx.error.SolverError:
-            abstol *= 10
-            reltol *= 10
-            feastol *= 10
-            logging.warning(
-                'ECOS failed with tol %.1e; retrying with tol %.1e',
-                abstol / 10, abstol)
-            opt_dist = prob.solve(solver=cvx.ECOS, abstol=abstol,
-                feastol=feastol, reltol=reltol)
+        while abstol <= 1:
+            try:
+                opt_dist = prob.solve(solver=cvx.ECOS,
+                    abstol=abstol, reltol=reltol, feastol=feastol)
+                break
+            except cvx.error.SolverError:
+                abstol *= 10
+                reltol *= 10
+                feastol *= 10
+                logging.warning(
+                    'ECOS failed with tol %.1e; retrying with tol %.1e',
+                    abstol / 10, abstol)
 
     x_star = np.array(cvx_var.value).flatten()
     np_dist = np.linalg.norm(x_star - x_0, 2)
