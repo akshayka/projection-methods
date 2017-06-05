@@ -74,7 +74,7 @@ def main():
         help='which solver to use; one of ' + str(list(k_solvers)))
     # --- options for k_apop --- #
     parser.add_argument(
-        '-alt', action='store_false', help=('use the alternating method '
+        '-alt', action='store_true', help=('use the alternating method '
         'instead of the averaging one for k_apop'))
     parser.add_argument(
         '-o', '--outer', type=str, default='exact',
