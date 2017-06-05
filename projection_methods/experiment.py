@@ -66,6 +66,8 @@ def main():
     parser.add_argument(
         '-ll', '--log_level', type=str, default='INFO',
         help='logging level (see the logging module for a list of levels)')
+    parser.add_argument(
+        '-v', '--verbose', action='store_true')
     # --- algorithms --- #
     parser.add_argument(
         'solver', metavar='S', type=str, default='apop',
@@ -117,16 +119,18 @@ def main():
 
     if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
-            momentum=args['momentum'])
+            momentum=args['momentum'], verbose=args['verbose'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
             outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
             momentum=args['momentum'],
-            average=not args['alt'])
+            average=not args['alt'],
+            verbose=args['verbose'])
     elif args['solver'] == k_dykstra:
-        solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'])
+        solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'],
+            verbose=args['verbose'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
