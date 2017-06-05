@@ -57,15 +57,18 @@ else:
     C = CartesianProduct(convex_sets, slices)
 
 # Read in parameters to construct the affine set.
-shape = eval(raw_input(
-    'Please enter the shape of the data matrix A; e.g., (10, 10): '))
+rows = int(raw_input(
+    'Please enter number of rows in the data matrix A; e.g., 10: '))
 density = float(raw_input('Please enter the desired density of A '
     '(float in (0, 1]): '))
 
 # Construct the problem
-problem = convex_affine_problem(C, shape, density)
+problem = convex_affine_problem(C, (rows, total_dim), density)
 
 with path.open('wb') as f:
     cPickle.dump(problem, f, protocol=cPickle.HIGHEST_PROTOCOL)
+
+with open(str(path) + '.txt', 'wb') as f:
+    f.write(str(problem))
 
 print 'Saved problem at ' + str(path)
