@@ -40,6 +40,9 @@ class ConvexSet(Projectable, Oracle):
         if (x_0 == x_star).all():
             return x_0, []
 
+        # a = x_0 - x_star
+        # a.T(y - x_star) <= 0 for all y in C
+        # <==> a.T(y) <= a.T(x_star) := b
         a = x_0 - x_star
         b = a.dot(x_star)
         halfspace = Halfspace(x=self._x , a=a, b=b) 

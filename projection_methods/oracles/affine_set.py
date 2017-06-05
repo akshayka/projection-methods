@@ -39,6 +39,9 @@ class AffineSet(ConvexSet):
                 in which every point x in the affine set must lie
         """
         x_star = self.project(x_0)
+
+        # a.dot(y - x_star) == 0, for all y in affine set
+        # <==> a.dot(y) == a.dot(x_star)
         a = x_0 - x_star
         b = a.dot(x_star)
         hyperplane = Hyperplane(x=self._x , a=a, b=b) 
