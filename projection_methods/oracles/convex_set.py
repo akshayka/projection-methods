@@ -65,4 +65,3 @@ class ConvexSet(Projectable, Oracle):
             return self
         else:
             raise(ValueError, "Unknown kind " + str(kind))
-

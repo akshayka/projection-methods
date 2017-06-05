@@ -8,7 +8,7 @@ class SOC(ConvexSet):
     """An oracle for second order cones
 
     Defines an oracle for the second order cone, i.e.,
-        \{ (y, t) | || ||y||_2 \leq t \}
+        \{ (z, t) | || ||z||_2 \leq t \}
     """
     def __init__(self, x):
         """
@@ -18,6 +18,7 @@ class SOC(ConvexSet):
         """
         constr = [cvxpy.norm(x[:-1], 2) <= x[-1]]
         super(SOC, self).__init__(x, constr)
+        self._shortcut = True
 
 
     def _contains(self, norm_z, t, atol=1e-8):
@@ -33,7 +34,7 @@ class SOC(ConvexSet):
         t = x_0[-1]
         norm_z = np.linalg.norm(z, 2)
 
-        # As given in [BV04, Chapter 8.Exercise]
+        # As given in [BV04, Chapter 8.Exercises]
         if norm_z <= -t:
             # this certainly will never happen when t > 0
             return np.zeros(np.shape(x_0))

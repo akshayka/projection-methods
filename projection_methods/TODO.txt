@@ -14,4 +14,14 @@
 ----- could it be numerical instability? for example, a halfspace is added that
       takes the iterates way out of the optimal set?
 ----- whatever is happening, it is still the case that every outer approximation
-      problem is feasible ...
+      problem is feasible
+----- due to numerical instability, it is possible that an untrue statement
+      (i.e., a hyperplane of the form { x | a.dot(x) == b } that is _not_
+      a superset (nor a subset) of the affine set, or similarly a halfspace
+      that is _not_ a superset (nor a subset) of the convex set; if this were
+      to happen, then the outer projection would not necessarily bring the
+      iterate closer to the optimal set (in particular, convergence guarantees
+      would be lost)
+----- it is also possible that my code / math for computing containing
+      hyperplanes and halfspaces is not correct, or that my code for, e.g.,
+      projecting onto an SOC is incorrect

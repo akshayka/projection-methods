@@ -14,7 +14,7 @@ class TestSOC(unittest.TestCase):
         # Test idempotency
         z = x_0[:-1]
         norm_z = np.linalg.norm(x_0[:-1], 2)
-        x_0[-1] = norm_z
+        x_0[-1] = norm_z + 10
         x_star = soc.project(x_0)
         self.assertTrue((x_0  == x_star).all(), "projection not idemptotent")
         p = cvxpy.Problem(cvxpy.Minimize(cvxpy.pnorm(x - x_0, 2)), constr)
@@ -38,7 +38,6 @@ class TestSOC(unittest.TestCase):
         p.solve()
         self.assertTrue(np.isclose(np.array(x.value).flatten(), x_star,
             atol=1e-3).all())
-
 
         # Test random projection
         x_0 = np.random.randn(1000)
