@@ -25,6 +25,17 @@ k_outers = {
 }
 
 
+# TODO(akshayka): This is a major hack. Pickling the feasibility problem
+# appears to corrupt ... something.
+def warm_up(problem):
+    import numpy as np
+    x_0 = np.ones(problem.x_opt.shape)
+    try:
+        problem.sets[1].project(x_0)
+    except ValueError as e:
+        print 'warm_up failed: %s' % str(e)
+
+
 def main():
     example =\
     """example usage:
@@ -109,10 +120,11 @@ def main():
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
+    warm_up(problem)
     it, res, status = solver.solve(problem)
     name = args['name'] if len(args['name']) > 0 else args['solver']
     data = {'it': it, 'res': res, 'status': status,
-            'problem': args['problem'], 'name': name}
+            'problem': args['problem'], 'name': name, 'solver': args['solver']}
     with open(fn, 'wb') as f:
         cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
 
