@@ -7,6 +7,7 @@ import time
 from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.apop import APOP
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
+from projection_methods.oracles.affine_set import AffineSet
 
 
 k_alt_p = 'altp'
@@ -26,14 +27,19 @@ k_outers = {
 
 
 # TODO(akshayka): This is a major hack. Pickling the feasibility problem
-# appears to corrupt ... something.
+# appears to corrupt ... something. In particular, the first call to project
+# on an AffineSet fails with "column index exceeds matrix dimensions." A
+# workaround that, well, works, is to re-instantiate the AffineSet (my guess
+# is that this is symptomatic of a bug in CVXPY related to constraints).
+# Note that if the other set contains a data matrix, then likely the
+# first projection onto it will also fail. A hack to fix this would simply
+# by to project onto each set exactly once within a try/except block, and
+# to ignore the exception.
 def warm_up(problem):
-    import numpy as np
-    x_0 = np.ones(problem.x_opt.shape)
-    try:
-        problem.sets[1].project(x_0)
-    except ValueError as e:
-        print 'warm_up failed: %s' % str(e)
+    for i, s in enumerate(problem.sets):
+        if type(s) == AffineSet:
+            s = AffineSet(s._x, s.A, s.b)
+            problem.sets[i] = s
 
 
 def main():
@@ -127,6 +133,9 @@ def main():
             'problem': args['problem'], 'name': name, 'solver': args['solver']}
     with open(fn, 'wb') as f:
         cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
+    last_res = sum(res[-1]) if hasattr(res[-1], '__iter__') else res[-1]
+    print '%s terminated after %d iterations; last residual %.5e' % (
+        name, len(it), last_res)
 
 
 if __name__ == '__main__':
