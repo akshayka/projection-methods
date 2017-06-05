@@ -76,7 +76,11 @@ class APOP(Optimizer):
             if self.verbose:
                 print 'iteration %d' % i
             x_k = iterates[-1]
+            if self.verbose:
+                print '\tprojecting onto left set ...'
             y_k, y_h_k = left_set.query(x_k)
+            if self.verbose:
+                print '\tprojecting onto right set ...'
             z_k, z_h_k = right_set.query(x_k)
             residuals.append(self._compute_residual_aux(x_k, y_k, z_k))
             if self._is_optimal(residuals[-1]):
@@ -85,8 +89,12 @@ class APOP(Optimizer):
 
             self.outer_manager.add(y_h_k + z_h_k)
             if self.average:
+                if self.verbose:
+                    print '\tprojecting _average_ onto outer approximation ...'
                 x_k_plus = self.outer_manager.outer().project(0.5 * (y_k + z_k))
             else:
+                if self.verbose:
+                    print '\tprojecting onto outer approximation ...'
                 x_k_plus = self.outer_manager.outer().project(x_k)
 
             if self.momentum is not None:

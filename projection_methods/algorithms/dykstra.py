@@ -52,4 +52,6 @@ class Dykstra(Optimizer):
             self.p[n] = self.b[n-1] + self.p[n-1] - self.a[n]
             self.q[n] = self.a[n] + self.q[n-1] - self.b[n]
 
+        # TODO(akshayka): does it matter if I return self.b vs self.a?
+        # the first implementation returned self.a ...
         return self.b, residuals, status
