@@ -60,8 +60,10 @@ def convex_affine_problem(convex_set, shape, density=0.01):
         FeasbilityProblem: a FeasibilityProblem where sets[0] := convex_set
             and sets[1] := the generated affine set (an instance of AffineSet)
     """
-    
-    x_0 = np.random.uniform(-1, 1, size=shape[0])
+    # check that the matrix multiplication makes sense
+    dimension = convex_set._var.size[0]
+    assert dimension == shape[1]
+    x_0 = np.random.uniform(-1, 1, size=dimension)
     x_opt = convex_set.project(x_0)
 
     A = scipy.sparse.rand(m=shape[0], n=shape[1], density=density, format='csc')
