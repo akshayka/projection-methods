@@ -3,8 +3,9 @@ import numpy as np
 from projection_methods.algorithms.optimizer import Optimizer
 
 class Dykstra(Optimizer):
-    def __init__(self, max_iters=100, atol=10e-5, initial_iterate=None):
-        super(Dykstra, self).__init__(max_iters, atol, initial_iterate)
+    def __init__(self,
+            max_iters=100, atol=10e-5, initial_iterate=None, verbose=False):
+        super(Dykstra, self).__init__(max_iters, atol, initial_iterate, verbose)
 
 
     def _compute_residual(self, x_k, left, right):
@@ -37,6 +38,8 @@ class Dykstra(Optimizer):
 
         status = Optimizer.Status.INACCURATE
         for n in xrange(1, self.max_iters + 1):
+            if self.verbose:
+                print 'iteration %d' % n
             # TODO(akshayka): Robust stopping criterion
             residuals.append(self._compute_residual(
                 self.b[n-1], left_set, right_set))

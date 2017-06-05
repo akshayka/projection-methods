@@ -6,8 +6,8 @@ from projection_methods.algorithms.utils import heavy_ball_update
 class AltP(Optimizer):
     def __init__(self,
             max_iters=100, atol=10e-5, initial_iterate=None,
-            momentum=None):
-        super(AltP, self).__init__(max_iters, atol, initial_iterate)
+            momentum=None, verbose=False):
+        super(AltP, self).__init__(max_iters, atol, initial_iterate, verbose)
         self.momentum = momentum
 
 
@@ -29,6 +29,8 @@ class AltP(Optimizer):
 
         status = Optimizer.Status.INACCURATE
         for i in xrange(self.max_iters):
+            if self.verbose:
+                print 'iteration %d' % i
             x_k = iterates[-1]
             y_k = right_set.project(x_k)
 

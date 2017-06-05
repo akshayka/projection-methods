@@ -5,10 +5,12 @@ class Optimizer(object):
         OPTIMAL, INACCURATE, INFEASIBLE = range(3)
 
 
-    def __init__(self, max_iters=100, atol=10e-5, initial_iterate=None):
+    def __init__(self, max_iters=100, atol=10e-5, initial_iterate=None,
+        verbose=False):
         self._max_iters = max_iters
         self._atol = atol
         self._initial_iterate = initial_iterate
+        self.verbose = verbose
 
 
     @abc.abstractmethod

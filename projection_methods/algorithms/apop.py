@@ -21,8 +21,8 @@ class APOP(Optimizer):
             max_iters=100, atol=10e-5, initial_iterate=None,
             outer_policy=PolyOuter.EXACT,
             max_hyperplanes=None, max_halfspaces=None,
-            momentum=None, average=True):
-        super(APOP, self).__init__(max_iters, atol, initial_iterate)
+            momentum=None, average=True, verbose=False):
+        super(APOP, self).__init__(max_iters, atol, initial_iterate, verbose)
         if outer_policy not in PolyOuter.POLICIES:
             raise ValueError(
                 'Policy must be chosen from ' +
@@ -72,7 +72,9 @@ class APOP(Optimizer):
         residuals = []
 
         status = Optimizer.Status.INACCURATE
-        for _ in xrange(self.max_iters):
+        for i in xrange(self.max_iters):
+            if self.verbose:
+                print 'iteration %d' % i
             x_k = iterates[-1]
             y_k, y_h_k = left_set.query(x_k)
             z_k, z_h_k = right_set.query(x_k)

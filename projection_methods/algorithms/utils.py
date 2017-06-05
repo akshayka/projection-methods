@@ -24,7 +24,7 @@ def project(x_0, cvx_set, cvx_var):
 
 
 def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
-    abstol=1e-7, reltol=1e-6, feastol=1e-7):
+    abstol=1e-4, reltol=1e-3, feastol=1e-4):
     """Return the projection and the distance"""
     # If the projection is unconstrained, the projection is trivially
     # idempotent
