@@ -76,13 +76,18 @@ class APOP(Optimizer):
             if self.verbose:
                 print 'iteration %d' % i
             x_k = iterates[-1]
+
             if self.verbose:
                 print '\tprojecting onto left set ...'
             y_k, y_h_k = left_set.query(x_k)
+
             if self.verbose:
                 print '\tprojecting onto right set ...'
             z_k, z_h_k = right_set.query(x_k)
+
             residuals.append(self._compute_residual_aux(x_k, y_k, z_k))
+            if self.verbose:
+                print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 break

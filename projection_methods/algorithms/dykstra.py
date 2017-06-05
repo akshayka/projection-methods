@@ -10,6 +10,9 @@ class Dykstra(Optimizer):
 
     def _compute_residual(self, x_k, left, right):
         """Returns tuple (dist from left set, dist from right set)"""
+        # TODO(akshayka): The better thing to do is to measure the distance
+        # from the optimal point, which, in the case of Dykstra's, is the
+        # projection of x_0 onto the intersection of left and right.
         y_k = left.project(x_k)
         z_k = right.project(x_k)
         return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))

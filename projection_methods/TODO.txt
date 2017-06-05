@@ -13,3 +13,5 @@
 - *** why does apop_exact diverge after a certain number of iterations? ***
 ----- could it be numerical instability? for example, a halfspace is added that
       takes the iterates way out of the optimal set?
+----- whatever is happening, it is still the case that every outer approximation
+      problem is feasible ...
