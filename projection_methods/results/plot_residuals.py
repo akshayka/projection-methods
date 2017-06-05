@@ -56,7 +56,7 @@ def main():
     plt.legend()
 
     if args['output'] is not None:
-        plt.savefig(output_path.name)
+        plt.savefig(str(output_path))
     else:
         datacursor(formatter='{label}'.format)
         plt.show()
