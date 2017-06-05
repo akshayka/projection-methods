@@ -30,3 +30,11 @@ class FeasibilityProblem(object):
         self.sets = sets
         self.x_opt = x_opt
         self.dimension = x_opt.shape
+
+
+    def __repr__(self):
+        string = type(self).__name__ + '\n'
+        string += 'dimension: %d' % self.dimension
+        string += str(self.sets[0]) + '\n'
+        string += str(self.sets[1])
+        return string
