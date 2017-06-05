@@ -10,7 +10,7 @@ class Zeros(ConvexSet):
                 members of the set
         """
         constr = [x == 0]
-        super(Reals, self).__init__(x, constr)
+        super(Zeros, self).__init__(x, constr)
 
     def contains(self, x_0, atol=1e-6):
         return not np.any(np.absolute(my_array) > atol)
