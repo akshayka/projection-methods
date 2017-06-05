@@ -1,20 +1,27 @@
-import projection_methods.algorithms.optimizer as optimizer
-import projection_methods.algorithms.utils as utils
-
 import numpy as np
 
-class Dykstra(optimizer.Optimizer):
-    def __init__(self, max_iters=100, eps=10e-5, initial_point=None):
-        optimizer.Optimizer.__init__(self, max_iters, eps, initial_point)
+from projection_methods.algorithms.optimizer import Optimizer
+
+class Dykstra(Optimizer):
+    def __init__(self, max_iters=100, atol=10e-5, initial_iterate=None):
+        super(Dykstra, self).__init__(max_iters, atol, initial_iterate)
 
 
-    def solve(self, problem, options={}):
-        """problem needs cvx_sets, cvx_vars, var_dim"""
-        cvx_sets = problem.cvx_sets
-        cvx_var = problem.cvx_var
+    def _compute_residual(self, x_k, left, right):
+        """Returns tuple (dist from left set, dist from right set)"""
+        y_k = left.project(x_k)
+        z_k = right.project(x_k)
+        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
 
-        if self._initial_point is None:
-            self._initial_point = np.random.randn(problem.var_dim, 1) 
+    def _is_optimal(self, r_k):
+        return r_k[0] <= self.atol and r_k[1] <= self.atol
+
+    def solve(self, problem):
+        left_set = problem.sets[0]
+        right_set = problem.sets[1]
+
+        iterate = (self._initial_iterate if
+            self._initial_iterate is not None else np.ones(problem.dimension))
 
         # (p_n), (q_n) are the auxiliary sequences, (a_n), (b_n) the main
         # sequences, defined in Bauschke's 98 paper
@@ -23,16 +30,23 @@ class Dykstra(optimizer.Optimizer):
         self.q = [None] * (self.max_iters + 1)
         self.a = [None] * (self.max_iters + 1)
         self.b = [None] * (self.max_iters + 1)
-        zero_vector = np.zeros(shape=(problem.var_dim, 1))
+        zero_vector = np.zeros(problem.dimension)
         self.p[0] = self.q[0] = zero_vector
-        self.b[0] = self.a[0] = self._initial_point
+        self.b[0] = self.a[0] = iterate
+        residuals = []
+
+        status = Optimizer.Status.INACCURATE
         for n in xrange(1, self.max_iters + 1):
-            # TODO(akshayka): Termination criterion
-            self.a[n] = utils.project(
-                self.b[n-1] + self.p[n-1], cvx_sets[0], cvx_var)
-            self.b[n] = utils.project(
-                self.a[n] + self.q[n-1], cvx_sets[1], cvx_var)
+            # TODO(akshayka): Robust stopping criterion
+            residuals.append(self._compute_residual(
+                self.b[n-1], left_set, right_set))
+            if self._is_optimal(residuals[-1]):
+                status = Optimizer.Status.OPTIMAL
+                break
+
+            self.a[n] = left_set.project(self.b[n-1] + self.p[n-1])
+            self.b[n] = right_set.project(self.a[n] + self.q[n-1])
             self.p[n] = self.b[n-1] + self.p[n-1] - self.a[n]
             self.q[n] = self.a[n] + self.q[n-1] - self.b[n]
-        self.iterates = self.a
-        return self.a[-1]
+
+        return self.b, residuals, status

@@ -6,13 +6,15 @@ import time
 
 from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.apop import APOP
-from projection_methods.oracles.dynamic_polyhedron import PolyOuter
+from projection_methods.algorithms.dykstra import Dykstra
 from projection_methods.oracles.affine_set import AffineSet
+from projection_methods.oracles.dynamic_polyhedron import PolyOuter
 
 
 k_alt_p = 'altp'
 k_apop = 'apop'
-k_solvers = frozenset([k_alt_p, k_apop])
+k_dykstra = 'dyk'
+k_solvers = frozenset([k_alt_p, k_apop, k_dykstra])
 
 k_exact = 'exact'
 k_elra = 'elra'
@@ -123,6 +125,8 @@ def main():
             max_halfspaces=args['max_halfspaces'],
             momentum=args['momentum'],
             average=not args['alt'])
+    elif args['solver'] == k_dykstra:
+        solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
