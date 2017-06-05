@@ -34,7 +34,7 @@ class FeasibilityProblem(object):
 
     def __repr__(self):
         string = type(self).__name__ + '\n'
-        string += 'dimension: %d' % self.dimension
+        string += 'dimension: %d\n' % self.dimension
         string += str(self.sets[0]) + '\n'
         string += str(self.sets[1])
         return string
