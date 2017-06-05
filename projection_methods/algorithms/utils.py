@@ -41,12 +41,14 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
     #  2. and practically every value is somewhat different from the latter
     # SCS (indirect == False) has problem 2. of (SCS indirect == True)
     if solver == cvx.SCS:
-        opt_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
+        solver_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
     else:
+        solved = False
         while abstol <= 1:
             try:
-                opt_dist = prob.solve(solver=cvx.ECOS,
+                solver_dist = prob.solve(solver=cvx.ECOS,
                     abstol=abstol, reltol=reltol, feastol=feastol)
+                solved = True
                 break
             except cvx.error.SolverError:
                 abstol *= 10
@@ -55,14 +57,18 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
                 logging.warning(
                     'ECOS failed with tol %.1e; retrying with tol %.1e',
                     abstol / 10, abstol)
+        if not solved:
+            logging.warning('ECOS failed; falling back to SCS.')
+            solver_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
 
     x_star = np.array(cvx_var.value).flatten()
     np_dist = np.linalg.norm(x_star - x_0, 2)
 
     if not np.isclose(obj.value, np_dist):
         logging.warning('obj.value (%f) != np_dist (%f)', obj.value, np_dist)
-    if not np.isclose(np_dist, opt_dist, atol=1e-5):
-        logging.warning('opt_dist (%f) != np_dist (%f)', opt_dist, np_dist)
+    if not np.isclose(np_dist, solver_dist, atol=1e-5):
+        logging.warning('solver_dist (%f) != np_dist (%f)',
+            solver_dist, np_dist)
 
     if prob.status != cvx.OPTIMAL and prob.status != cvx.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
