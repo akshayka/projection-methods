@@ -1,3 +1,5 @@
+import numpy as np
+
 from projection_methods.oracles.convex_set import ConvexSet
 
 
@@ -13,7 +15,7 @@ class Zeros(ConvexSet):
         super(Zeros, self).__init__(x, constr)
 
     def contains(self, x_0, atol=1e-6):
-        return not np.any(np.absolute(my_array) > atol)
+        return not np.any(np.absolute(x_0) > atol)
 
     def project(self, x_0):
         return x_0 if self.contains(x_0) else np.zeros(x_0.shape)
