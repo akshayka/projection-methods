@@ -114,7 +114,7 @@ def main():
     data = {'it': it, 'res': res, 'status': status,
             'problem': args['problem'], 'name': name}
     with open(fn, 'wb') as f:
-        cPickle.dump(data, f)
+        cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
 
 
 if __name__ == '__main__':

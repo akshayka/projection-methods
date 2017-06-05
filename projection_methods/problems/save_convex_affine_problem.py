@@ -66,6 +66,6 @@ density = float(raw_input('Please enter the desired density of A '
 problem = convex_affine_problem(C, shape, density)
 
 with path.open('wb') as f:
-    cPickle.dump(problem, f)
+    cPickle.dump(problem, f, protocol=cPickle.HIGHEST_PROTOCOL)
 
 print 'Saved problem at ' + str(path)
