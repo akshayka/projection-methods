@@ -1,3 +1,5 @@
+import numpy as np
+
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.projectables.hyperplane import Hyperplane
 
@@ -26,7 +28,12 @@ class AffineSet(ConvexSet):
         self.b = b
         self._hyperplanes = []
         super(AffineSet, self).__init__(x, constr)
+        self._shortcut = True
 
+
+    def contains(self, x_0, atol=1e-4):
+        """Return True if x_0 in affine set, False otherwise"""
+        return np.allclose(self.A.dot(x_0), self.b, atol=atol)
 
     def query(self, x_0):
         """As ConvexSet.query, but returns a Hyperplane
