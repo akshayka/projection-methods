@@ -1,4 +1,6 @@
 import numpy as np
+import scipy.sparse
+import scipy.sparse.linalg
 
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.projectables.hyperplane import Hyperplane
@@ -23,17 +25,41 @@ class AffineSet(ConvexSet):
             A (numpy.ndarray): a matrix
             b (numpy.ndarray): a target vector
         """
+        assert A.shape[1] == x.size[0]
+        self.x_dim = x.size[0]
         constr = [A * x == b]
         self.A = A
         self.b = b
         self._hyperplanes = []
         super(AffineSet, self).__init__(x, constr)
         self._shortcut = True
+        self._kkt_solver = None
 
 
     def contains(self, x_0, atol=1e-4):
         """Return True if x_0 in affine set, False otherwise"""
         return np.allclose(self.A.dot(x_0), self.b, atol=atol)
+
+
+    def _make_kkt_solver(self):
+        sparse_eye = scipy.sparse.eye(self.A.shape[1], format='csc')
+        kkt_matrix = scipy.sparse.bmat(
+            [[sparse_eye, self.A.T], [self.A, None]], format='csc')
+        kkt_solver = scipy.sparse.linalg.factorized(kkt_matrix)
+        return kkt_solver
+
+
+    def _project(self, x_0):
+        if self._kkt_solver is None:
+            # TODO(akshayka): it would be fine to do this in init,
+            # except for whatever reason the return value of factorized()
+            # cannot be pickled
+            # ("expected string or Unicode object, NoneType found")
+            self._kkt_solver = self._make_kkt_solver()
+        target = np.hstack((x_0, self.b))
+        sol = self._kkt_solver(target)
+        return sol[:self.x_dim]
+        
 
     def query(self, x_0):
         """As ConvexSet.query, but returns a Hyperplane
