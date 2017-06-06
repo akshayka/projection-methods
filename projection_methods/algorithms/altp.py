@@ -28,11 +28,13 @@ class AltP(Optimizer):
         residuals = []
 
         status = Optimizer.Status.INACCURATE
+        self.all_iterates = []
         for i in xrange(self.max_iters):
             if self.verbose:
                 print 'iteration %d' % i
             x_k = iterates[-1]
             y_k = right_set.project(x_k)
+            self.all_iterates.extend([x_k, y_k])
 
             residuals.append(self._compute_residual(x_k, y_k))
             if self.verbose:
