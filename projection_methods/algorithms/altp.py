@@ -35,6 +35,8 @@ class AltP(Optimizer):
             y_k = right_set.project(x_k)
 
             residuals.append(self._compute_residual(x_k, y_k))
+            if self.verbose:
+                print '\tresidual: %f' % residuals[-1]
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 break
