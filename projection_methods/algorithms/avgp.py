@@ -24,7 +24,7 @@ class AvgP(Optimizer):
 
         iterate = (self._initial_iterate if
             self._initial_iterate is not None else np.ones(problem.dimension))
-        iterates = [iterate] if self.average
+        iterates = [iterate]
         residuals = []
 
         status = Optimizer.Status.INACCURATE
@@ -35,7 +35,9 @@ class AvgP(Optimizer):
             y_k = left_set.project(x_k)
             z_k = right_set.project(x_k)
 
-            residuals.append(self._compute_residual_avg(x_k, y_k, z_k))
+            residuals.append(self._compute_residual(x_k, y_k, z_k))
+            if self.verbose:
+                print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 break
