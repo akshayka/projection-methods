@@ -3,14 +3,17 @@
 - write shell scripts, run experiments, modify algorithms -- rinse and repeat!
 
 - investigate: why is convergence so fast (1 iteration!) when we start with ones?
-- cook up harder problems (convergence should not happen after one iteration!)
+- cook up harder problems (convergence should not happen after one iteration!) [Done!]
 - implement SCS problem in problem_factory
-- *** what is a correct way to measure residuals for all three algorithms? ***
+- implement projection onto affine set as a (factorized) sparse matrix solve [Done!]
+
+*** what is a correct way to measure residuals for all three algorithms? ***
 ----- the sum of the distances from the iterate to both the left and right sets
       feels very suboptimal. For example, if the two sets were hyperplanes that
       were almost parallel, then this sum could be very small even when the
       iterate were very far from the intersection of the two hyperplanes.
-- *** why does apop_exact diverge after a certain number of iterations? ***
+
+*** why does apop_exact diverge after a certain number of iterations? ***
 ----- could it be numerical instability? for example, a halfspace is added that
       takes the iterates way out of the optimal set?
 ----- whatever is happening, it is still the case that every outer approximation
@@ -25,3 +28,14 @@
 ----- it is also possible that my code / math for computing containing
       hyperplanes and halfspaces is not correct, or that my code for, e.g.,
       projecting onto an SOC is incorrect
+----- it _may_ have been a pickling issue. the class definitions for many of
+      the oracles and projectables changed after the object had been pickled.
+      scrapping the old problem and generating a new one has "solved" the issue,
+      insofar as apop (exact) generates a reasonable sequence of iterates
+      when solving a similar problem (problem name 2550_rszs); however, the
+      residuals are embarassingly high (> 0.1). it is not clear if the issue
+      has been corrected, or if it has simply been hidden.
+
+*** how could apop possibly perform worse than altp? ***
+- but this is what my empirical results seem to demonstrate.
+- for an apples-to-apples comparison, I should pit altpop with altp.
