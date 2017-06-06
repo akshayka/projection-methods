@@ -5,6 +5,7 @@ import os
 import time
 
 from projection_methods.algorithms.altp import AltP
+from projection_methods.algorithms.avgp import AvgP
 from projection_methods.algorithms.apop import APOP
 from projection_methods.algorithms.dykstra import Dykstra
 from projection_methods.oracles.affine_set import AffineSet
@@ -12,9 +13,10 @@ from projection_methods.oracles.dynamic_polyhedron import PolyOuter
 
 
 k_alt_p = 'altp'
+k_avg_p = 'avgp'
 k_apop = 'apop'
 k_dykstra = 'dyk'
-k_solvers = frozenset([k_alt_p, k_apop, k_dykstra])
+k_solvers = frozenset([k_alt_p, k_avg_p, k_apop, k_dykstra])
 
 k_exact = 'exact'
 k_elra = 'elra'
@@ -119,6 +121,9 @@ def main():
 
     if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
+            momentum=args['momentum'], verbose=args['verbose'])
+    elif args['solver'] == k_avg_p:
+        solver = AvgP(max_iters=args['max_iters'], atol=args['atol'],
             momentum=args['momentum'], verbose=args['verbose'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
