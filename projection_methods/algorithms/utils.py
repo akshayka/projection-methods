@@ -1,8 +1,8 @@
-import cvxpy as cvx
+import cvxpy
 import logging
 import numpy as np
 
-def project(x_0, cvx_set, cvx_var):
+def project(x_0, cvxpy_set, cvxpy_var):
     """ 
     Project onto a convex set.
 
@@ -10,29 +10,29 @@ def project(x_0, cvx_set, cvx_var):
     ----------
     x_0 : double
         The point to project onto the provided set.
-    cvx_set : list
+    cvxpy_set : list
         List of cvxpy constraints defining a convex set.
-    cvx_var : cvxpy.Variable
-        cvxpy variable used in specifying cvx_set
+    cvxpy_var : cvxpy.Variable
+        cvxpy variable used in specifying cvxpy_set
 
     Returns
     -------
-    The projection of x_0 onto cvx_set : list-like (float)
+    The projection of x_0 onto cvxpy_set : list-like (float)
     """
-    x_star, _ = project_aux(x_0=x_0, cvx_set=cvx_set, cvx_var=cvx_var)
+    x_star, _ = project_aux(x_0=x_0, cvxpy_set=cvxpy_set, cvxpy_var=cvxpy_var)
     return x_star
 
 
-def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
-    abstol=1e-4, reltol=1e-3, feastol=1e-4):
+def project_aux(x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
+    use_indirect=True, abstol=1e-4, reltol=1e-3, feastol=1e-4):
     """Return the projection and the distance"""
     # If the projection is unconstrained, the projection is trivially
     # idempotent
-    if cvx_set == []:
+    if cvxpy_set == []:
         return x_0, 0
 
-    obj = cvx.Minimize(cvx.pnorm(cvx_var - x_0, 2))
-    prob = cvx.Problem(obj, cvx_set)
+    obj = cvxpy.Minimize(cvxpy.pnorm(cvxpy_var - x_0, 2))
+    prob = cvxpy.Problem(obj, cvxpy_set)
 
     # ECOS sometimes fails at high tolerances
     #
@@ -40,28 +40,30 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
     #  1. an order of magnitude different from the explicitly computed distance,
     #  2. and practically every value is somewhat different from the latter
     # SCS (indirect == False) has problem 2. of (SCS indirect == True)
-    if solver == cvx.SCS:
-        solver_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
+    if solver == cvxpy.MOSEK:
+        solver_dist = prob.solve(solver=cvxpy.MOSEK)
+    elif solver == cvxpy.SCS:
+        solver_dist = prob.solve(solver=cvxpy.SCS, use_indirect=use_indirect)
     else:
         solved = False
         while abstol <= 1:
             try:
-                solver_dist = prob.solve(solver=cvx.ECOS,
+                solver_dist = prob.solve(solver=cvxpy.ECOS,
                     abstol=abstol, reltol=reltol, feastol=feastol)
                 solved = True
                 break
-            except cvx.error.SolverError:
+            except cvxpy.error.SolverError as e:
                 abstol *= 10
                 reltol *= 10
                 feastol *= 10
                 logging.warning(
-                    'ECOS failed with tol %.1e; retrying with tol %.1e',
-                    abstol / 10, abstol)
+                    'ECOS failed (%s) with tol %.1e; retrying with tol %.1e',
+                    str(e), abstol / 10, abstol)
         if not solved:
             logging.warning('ECOS failed; falling back to SCS.')
-            solver_dist = prob.solve(solver=cvx.SCS, use_indirect=use_indirect)
+            solver_dist = prob.solve(solver=cvxpy.SCS, use_indirect=use_indirect)
 
-    x_star = np.array(cvx_var.value).flatten()
+    x_star = np.array(cvxpy_var.value).flatten()
     np_dist = np.linalg.norm(x_star - x_0, 2)
 
     if not np.isclose(obj.value, np_dist):
@@ -70,13 +72,13 @@ def project_aux(x_0, cvx_set, cvx_var, solver=cvx.ECOS, use_indirect=True,
         logging.warning('solver_dist (%f) != np_dist (%f)',
             solver_dist, np_dist)
 
-    if prob.status != cvx.OPTIMAL and prob.status != cvx.OPTIMAL_INACCURATE:
+    if prob.status != cvxpy.OPTIMAL and prob.status != cvxpy.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
 
     return x_star, np_dist
 
 
-def plane_search(iterates, num_iterates, cvx_set, cvx_var):
+def plane_search(iterates, num_iterates, cvxpy_set, cvxpy_var):
     """
     Plane search on previous iterates when performing the projection.
 
@@ -89,25 +91,26 @@ def plane_search(iterates, num_iterates, cvx_set, cvx_var):
         the i-th iterate.
     num_iterates : int
         Use the num_iterates most recent iterates in the plane search
-    cvx_set : list
+    cvxpy_set : list
         List of cvxpy constraints defining the convex set on which to project
-    cvx_var : cvxpy.Variable
-        cvxpy variable used in specifying cvx_set
+    cvxpy_var : cvxpy.Variable
+        cvxpy variable used in specifying cvxpy_set
     """
     num_iterates = min(len(iterates), num_iterates)
     iterates = iterates[-num_iterates:]
-    theta = cvx.Variable(num_iterates)
+    theta = cvxpy.Variable(num_iterates)
 
     # in the plane search, we seek a convex combination of the iterates
     # that is close to a point in the other convex set
-    obj = cvx.Minimize(
-        cvx.pnorm(
-            sum([p * it for (p, it) in zip(theta, iterates)]) - cvx_var, 2))
-    constrs = cvx_set + [cvx.sum_entries(theta) == 1] + [theta >= 0] + [theta <= 1]
-    prob = cvx.Problem(obj, constrs)
-    prob.solve(solver=cvx.SCS, use_indirect=True)
+    obj = cvxpy.Minimize(
+        cvxpy.pnorm(
+            sum([p * it for (p, it) in zip(theta, iterates)]) - cvxpy_var, 2))
+    constrs = (cvxpy_set + [cvxpy.sum_entries(theta) == 1] +
+        [theta >= 0] + [theta <= 1])
+    prob = cvxpy.Problem(obj, constrs)
+    prob.solve(solver=cvxpy.SCS, use_indirect=True)
     opt_point = sum([p.value * it for (p, it) in zip(theta, iterates)])
-    np_dist = np.linalg.norm(opt_point - cvx_var.value, 2)
+    np_dist = np.linalg.norm(opt_point - cvxpy_var.value, 2)
     return opt_point, np_dist
 
 def heavy_ball_update(iterates, velocity, alpha=0.8, beta=0.2):
