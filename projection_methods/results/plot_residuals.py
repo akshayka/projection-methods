@@ -42,8 +42,7 @@ def main():
     max_its = 0
     for d in data:
         res = d['res']
-        if hasattr(res[0], '__iter__'):
-            res = [sum(r) for r in res]
+        res = [sum(r) for r in res]
         if 0 in res:
             res = [r + 1e-20 for r in res]
         it = range(len(res))
