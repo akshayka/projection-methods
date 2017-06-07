@@ -157,7 +157,8 @@ class DynamicPolyhedron(Oracle):
 
 
     def _add_halfspace(self, halfspace):
-        if len(self._outer_halfspaces) >= self.max_halfspaces:
+        if (len(self._outer_halfspaces) >= self.max_halfspaces and
+                self.policy in PolyOuter.EVICTIONS):
             self._outer_halfspaces = self._evict(self._outer_halfspaces,
                 halfspace, self.max_halfspaces)
         else:
