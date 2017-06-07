@@ -4,21 +4,17 @@ from projection_methods.algorithms.optimizer import Optimizer
 
 class Dykstra(Optimizer):
     def __init__(self,
-            max_iters=100, atol=10e-5, initial_iterate=None, verbose=False):
-        super(Dykstra, self).__init__(max_iters, atol, initial_iterate, verbose)
+            max_iters=100, atol=10e-5, do_all_iters=False,
+            initial_iterate=None, verbose=False):
+        super(Dykstra, self).__init__(max_iters, atol, do_all_iters,
+            initial_iterate, verbose)
 
 
     def _compute_residual(self, x_k, left, right):
         """Returns tuple (dist from left set, dist from right set)"""
-        # TODO(akshayka): The better thing to do is to measure the distance
-        # from the optimal point, which, in the case of Dykstra's, is the
-        # projection of x_0 onto the intersection of left and right.
         y_k = left.project(x_k)
         z_k = right.project(x_k)
-        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
-
-    def _is_optimal(self, r_k):
-        return r_k[0] <= self.atol and r_k[1] <= self.atol
+        return super(Dykstra, self)._compute_residual(x_k, y_k, z_k)
 
     def solve(self, problem):
         left_set = problem.sets[0]
@@ -50,7 +46,8 @@ class Dykstra(Optimizer):
                 print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
-                break
+                if not self.do_all_iters:
+                    break
 
             self.a[n] = left_set.project(self.b[n-1] + self.p[n-1])
             self.b[n] = right_set.project(self.a[n] + self.q[n-1])

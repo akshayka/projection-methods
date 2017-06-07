@@ -5,18 +5,12 @@ from projection_methods.algorithms.utils import heavy_ball_update
 
 class AvgP(Optimizer):
     def __init__(self,
-            max_iters=100, atol=10e-5, initial_iterate=None,
-            momentum=None, verbose=False):
-        super(AvgP, self).__init__(max_iters, atol, initial_iterate, verbose)
+            max_iters=100, atol=10e-5, do_all_iters=False,
+            initial_iterate=None, momentum=None, verbose=False):
+        super(AvgP, self).__init__(max_iters, atol, do_all_iters,
+            initial_iterate, verbose)
         self.momentum = momentum
 
-
-    def _compute_residual(self, x_k, y_k, z_k):
-        """Returns tuple (dist from left set, dist from right set)"""
-        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
-
-    def _is_optimal(self, r_k):
-        return r_k[0] <= self.atol and r_k[1] <= self.atol
 
     def solve(self, problem):
         left_set = problem.sets[0]
@@ -40,7 +34,8 @@ class AvgP(Optimizer):
                 print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
-                break
+                if not self.do_all_iters:
+                    break
             x_k_plus = 0.5 * (y_k + z_k)
 
             if self.momentum is not None:

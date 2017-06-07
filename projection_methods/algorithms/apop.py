@@ -18,11 +18,12 @@ class APOP(Optimizer):
             one per iteration, a la ADMM)
     """
     def __init__(self,
-            max_iters=100, atol=10e-5, initial_iterate=None,
+            max_iters=100, atol=10e-5, do_all_iters=False, initial_iterate=None,
             outer_policy=PolyOuter.EXACT,
             max_hyperplanes=None, max_halfspaces=None,
             momentum=None, average=True, verbose=False):
-        super(APOP, self).__init__(max_iters, atol, initial_iterate, verbose)
+        super(APOP, self).__init__(max_iters, atol, do_all_iters,
+            initial_iterate, verbose)
         if outer_policy not in PolyOuter.POLICIES:
             raise ValueError(
                 'Policy must be chosen from ' +
@@ -35,19 +36,6 @@ class APOP(Optimizer):
         self.momentum = momentum
         self.average = average
 
-
-    def _compute_residual_aux(self, x_k, y_k, z_k):
-        """Returns tuple (dist from left set, dist from right set)"""
-        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
-
-    def _compute_residual(self, x_k, left_set, right_set):
-        """Returns tuple (dist from left set, dist from right set)"""
-        y_k, _ = left_set.query(x_k)
-        z_k, _ = right_set.query(x_k)
-        return self._compute_residual_aux(x_k, y_k, z_k)
-
-    def _is_optimal(self, r_k):
-        return r_k[0] <= self.atol and r_k[1] <= self.atol
 
     def solve(self, problem):
         # the nomenclature `left` and `right` is by my convention;
@@ -76,31 +64,37 @@ class APOP(Optimizer):
             if self.verbose:
                 print 'iteration %d' % i
             x_k = iterates[-1]
+            if self.average:
+                if self.verbose:
+                    print 'performing _averaged_ round'
+                    print '\tprojecting onto left set ...'
+                y_k, y_h_k = left_set.query(x_k)
+                if self.verbose:
+                    print '\tprojecting onto right set ...'
+                z_k, z_h_k = right_set.query(x_k)
+                x_k_prime = 0.5 * (y_k + z_k)
+            else:
+                if self.verbose:
+                    print 'performing _alternating_ round'
+                    print '\tprojecting onto left set ...'
+                y_k, y_h_k = left_set.query(x_k)
+                if self.verbose:
+                    print '\tprojecting (twice) onto right set ...'
+                z_k = right_set.project(x_k) # needed to compute residual
+                x_k_prime, z_h_k = right_set.query(y_k)
 
-            if self.verbose:
-                print '\tprojecting onto left set ...'
-            y_k, y_h_k = left_set.query(x_k)
-
-            if self.verbose:
-                print '\tprojecting onto right set ...'
-            z_k, z_h_k = right_set.query(x_k)
-
-            residuals.append(self._compute_residual_aux(x_k, y_k, z_k))
+            residuals.append(self._compute_residual(x_k, y_k, z_k))
             if self.verbose:
                 print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
-                break
+                if not self.do_all_iters:
+                    break
 
             self.outer_manager.add(y_h_k + z_h_k)
-            if self.average:
-                if self.verbose:
-                    print '\tprojecting _average_ onto outer approximation ...'
-                x_k_plus = self.outer_manager.outer().project(0.5 * (y_k + z_k))
-            else:
-                if self.verbose:
-                    print '\tprojecting onto outer approximation ...'
-                x_k_plus = self.outer_manager.outer().project(x_k)
+            if self.verbose:
+                print '\tprojecting onto outer approximation ...'
+            x_k_plus = self.outer_manager.outer().project(x_k_prime)
 
             if self.momentum is not None:
                 iterate = heavy_ball_update(
@@ -108,5 +102,4 @@ class APOP(Optimizer):
                     alpha=self.momentum['alpha'],
                     beta=self.momentum['beta'])
             iterates.append(x_k_plus)
-
         return iterates, residuals, status

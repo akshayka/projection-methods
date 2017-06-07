@@ -5,18 +5,12 @@ from projection_methods.algorithms.utils import heavy_ball_update
 
 class AltP(Optimizer):
     def __init__(self,
-            max_iters=100, atol=10e-5, initial_iterate=None,
+            max_iters=100, atol=10e-5, do_all_iters=False, initial_iterate=None,
             momentum=None, verbose=False):
-        super(AltP, self).__init__(max_iters, atol, initial_iterate, verbose)
+        super(AltP, self).__init__(max_iters, atol, do_all_iters,
+            initial_iterate, verbose)
         self.momentum = momentum
 
-
-    def _compute_residual(self, x_k, y_k):
-        """Returns dist(x_k, y_k)"""
-        return np.linalg.norm(x_k - y_k, 2)
-
-    def _is_optimal(self, r_k):
-        return r_k <= self.atol
 
     def solve(self, problem):
         left_set = problem.sets[0]
@@ -28,21 +22,23 @@ class AltP(Optimizer):
         residuals = []
 
         status = Optimizer.Status.INACCURATE
-        self.all_iterates = []
+        self.all_iterates = [iterate]
         for i in xrange(self.max_iters):
             if self.verbose:
                 print 'iteration %d' % i
             x_k = iterates[-1]
             y_k = right_set.project(x_k)
-            self.all_iterates.extend([x_k, y_k])
 
-            residuals.append(self._compute_residual(x_k, y_k))
+            # note that x_k = left_set.project(x_k)
+            residuals.append(self._compute_residual(x_k, x_k, y_k))
             if self.verbose:
-                print '\tresidual: %f' % residuals[-1]
+                print '\tresidual: %f' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
-                break
+                if not self.do_all_iters:
+                    break
             x_k_plus = left_set.project(y_k)
+            self.all_iterates.extend([y_k, x_k_plus])
 
             if self.momentum is not None:
                 iterate = heavy_ball_update(
@@ -50,5 +46,4 @@ class AltP(Optimizer):
                     alpha=self.momentum['alpha'],
                     beta=self.momentum['beta'])
             iterates.append(x_k_plus)
-
         return iterates, residuals, status
