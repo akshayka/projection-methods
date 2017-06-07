@@ -33,14 +33,10 @@ class Projectable(object):
                 "constrained name: %s, supplied name: %s" %
                 (constrained._name, self._var._name))
 
-        # NB: Subclasses should set self._shortcut to True if and only
-        # if they implement a more efficient version of `contains`, below
-        self._shortcut = False
-
 
     def contains(self, x_0, atol=1e-4):
         """Returns True if x_0 in set, False otherwise"""
-        return np.isclose(self._project(x_0), x_0, atol=atol).all()
+        return np.isclose(self.project(x_0), x_0, atol=atol).all()
 
 
     def project(self, x_0):
@@ -51,14 +47,7 @@ class Projectable(object):
         Returns:
             array-like: projection of x_0 onto set
         """
-        return self._project(x_0)
-
-
-    def _project(self, x_0):
-        if self._shortcut and self.contains(x_0):
-            return x_0
-        else:
-            return utils.project(x_0, self._constr, self._x)
+        return utils.project(x_0, self._constr, self._x)
 
 
     def __repr__(self):

@@ -32,7 +32,6 @@ class AffineSet(ConvexSet):
         self.b = b
         self._hyperplanes = []
         super(AffineSet, self).__init__(x, constr)
-        self._shortcut = True
         self._kkt_solver = None
 
 
@@ -49,7 +48,10 @@ class AffineSet(ConvexSet):
         return kkt_solver
 
 
-    def _project(self, x_0):
+    def project(self, x_0):
+        if self.contains(x_0):
+            return x_0
+
         if self._kkt_solver is None:
             # TODO(akshayka): it would be fine to do this in init,
             # except for whatever reason the return value of factorized()

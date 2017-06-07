@@ -18,7 +18,6 @@ class SOC(ConvexSet):
         """
         constr = [cvxpy.norm(x[:-1], 2) <= x[-1]]
         super(SOC, self).__init__(x, constr)
-        self._shortcut = True
 
 
     def _contains(self, norm_z, t, atol=1e-8):

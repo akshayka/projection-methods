@@ -34,6 +34,13 @@ class CartesianProduct(ConvexSet):
         super(CartesianProduct, self).__init__(x, constr)
 
 
+    def project(self, x_0):
+        x_star = np.zeros(x_0.shape)
+        for s, slx in zip(self.sets, self.slices):
+            x_star[slx] = s.project(x_0[slx])
+        return x_star
+        
+    
     def query(self, x_0):
         """As ConvexSet.query, but returns a list of Halfspaces/Hyperplanes
 
