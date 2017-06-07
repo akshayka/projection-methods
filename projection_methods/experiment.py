@@ -95,6 +95,9 @@ def main():
         '-i', '--max_iters', type=int, default=100,
         help='maximum number of iterations to run the algorithm')
     parser.add_argument(
+        '-a', '--do_all_iters', action='store_true',
+        help='perform exactly max_iters iterations.')
+    parser.add_argument(
         '-mo', '--momentum', nargs=2, type=float, default=None,
         help=('alpha and beta values for momentum (defaults to no momentum); '
         'e.g.: 0.95 0.05 yields alpha == 0.95, beta == 0.05'))
@@ -121,12 +124,14 @@ def main():
 
     if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
-            momentum=args['momentum'], verbose=args['verbose'])
+            do_all_iters=args['do_all_iters'], momentum=args['momentum'],
+            verbose=args['verbose'])
     elif args['solver'] == k_avg_p:
         solver = AvgP(max_iters=args['max_iters'], atol=args['atol'],
             momentum=args['momentum'], verbose=args['verbose'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
+            do_all_iters=args['do_all_iters'],
             outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
@@ -135,7 +140,7 @@ def main():
             verbose=args['verbose'])
     elif args['solver'] == k_dykstra:
         solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'],
-            verbose=args['verbose'])
+            do_all_iters=args['do_all_iters'], verbose=args['verbose'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
