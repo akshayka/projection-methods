@@ -1,17 +1,34 @@
-- implement save_problem [Done]
-- write plotting code [Done!]
-- write shell scripts, run experiments, modify algorithms -- rinse and repeat!
-
-- investigate: why is convergence so fast (1 iteration!) when we start with ones?
-- cook up harder problems (convergence should not happen after one iteration!) [Done!]
+- redo old experiments (SOC, R) [i.e., no zero cones]
+- implement good diagonal scaling of data matrices
 - implement SCS problem in problem_factory
-- implement projection onto affine set as a (factorized) sparse matrix solve [Done!]
+
+- over-relaxation
+- over-projection
+- line search
+- multiple state variables
+
+*** What's the deal with zero cones? can't we just do a presolve and get rid
+    of variables that are known to be zero? ***
+- double check with boyd that eliminating zero cones in outer projection is fine
+
+~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+completed tasks
+- implement save_problem
+- write plotting code
+- implement projection onto affine set as a (factorized) sparse matrix solve
+- cook up harder problems (convergence should not happen after one iteration!)
+
+*** If a portion of x lies in the zero cone, can we add that constraint to
+    for exaple our outer projections and still solve them efficiently?
+----- sure; this just amounts to eliminating some variables, I think.
+> my answer is yes; this is just an elimination
 
 *** what is a correct way to measure residuals for all three algorithms? ***
 ----- the sum of the distances from the iterate to both the left and right sets
       feels very suboptimal. For example, if the two sets were hyperplanes that
       were almost parallel, then this sum could be very small even when the
       iterate were very far from the intersection of the two hyperplanes.
+> [Done -- the distance from the two sets is fine]
 
 *** why does apop_exact diverge after a certain number of iterations? ***
 ----- could it be numerical instability? for example, a halfspace is added that
@@ -35,7 +52,4 @@
       when solving a similar problem (problem name 2550_rszs); however, the
       residuals are embarassingly high (> 0.1). it is not clear if the issue
       has been corrected, or if it has simply been hidden.
-
-*** how could apop possibly perform worse than altp? ***
-- but this is what my empirical results seem to demonstrate.
-- for an apples-to-apples comparison, I should pit altpop with altp.
+> [Done -- it was a pickling issue]
