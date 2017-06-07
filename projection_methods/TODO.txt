@@ -9,7 +9,11 @@
 
 *** What's the deal with zero cones? can't we just do a presolve and get rid
     of variables that are known to be zero? ***
-- double check with boyd that eliminating zero cones in outer projection is fine
+----- perhaps eliminating it breaks the avoidance of zero (ie, perhaps iterates
+      may converge to zero, even if a non-zero solution exists, when the
+      zero cones are eliminated).
+----- double check with boyd that eliminating zero cones in outer projection is
+      fine
 
 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 completed tasks
