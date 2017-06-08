@@ -161,9 +161,9 @@ def main():
             data['case'] = 'infeasible'
         else:
             data['case'] = 'indeterminate'
-        data['objective_value'] = problem.objective_value(problem.p(it[-1]))
-        data['optimal_value'] = problem.optimal_value()
-        data['primal_residual'] = data['objective'] - data['optimal_value']
+        data['obj_val'] = problem.objective_value(problem.p(it[-1]))
+        data['opt_val'] = problem.optimal_value()
+        data['primal_res'] = data['obj_val'] - data['opt_val']
 
     with open(fn, 'wb') as f:
         cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
