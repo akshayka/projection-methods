@@ -37,6 +37,7 @@ def random_cone_program(x, m, n, density=0.01):
     assert m >= n
     dims = [n, m, 1, n, m, 1]
     assert x.size == (sum(dims), 1)
+    #          0      1    2       3      4    5
     classes = [Reals, SOC, NonNeg, Zeros, SOC, NonNeg]
     sets = []
     slices = []
@@ -73,17 +74,17 @@ def random_cone_program(x, m, n, density=0.01):
     cm = np.matrix(c).T
     bm = np.matrix(b).T
     Q = scipy.sparse.bmat([
-        [None, A.T, cm],
-        [-A, None, bm],
+        [None,   A.T,  cm  ],
+        [-A,     None, bm  ],
         [-cm.T, -bm.T, None]
     ])
     Q_dim = m + n + 1
     assert Q.shape == (Q_dim, Q_dim)
 
     # Qu = v if and only if [Q, -I] * [u,v].T = 0
-    Q_tilde = scipy.sparse.bmat([[Q, scipy.sparse.eye(Q.shape[0])]])
+    Q_tilde = scipy.sparse.bmat([[Q, -1 * scipy.sparse.eye(Q.shape[0])]])
     assert Q_tilde.shape == (Q_dim, 2 * Q_dim)
-    affine_set = AffineSet(x, A=Q_tilde, b=np.zeros(Q_tilde.shape[0]))
+    affine_set = AffineSet(x=x, A=Q_tilde, b=np.zeros(Q_tilde.shape[0]))
 
     return SCSProblem(sets=[product_set, affine_set], x_opt=None,
         Q=Q, A=A, b=b, c=c, p_opt=p)
