@@ -1,6 +1,10 @@
 from projection_methods.oracles.convex_set import ConvexSet
 
+import numpy as np
 
+
+# TODO(akshayka): should query return a unique halfspace each time?
+# (i.e., x_1 >= 0, x_2 >= 0, ... and so on?)
 class NonNeg(ConvexSet):
     """A (trivial) oracle for the nonnegative orthant."""
     def __init__(self, x):
@@ -17,6 +21,3 @@ class NonNeg(ConvexSet):
 
     def project(self, x_0):
         return np.maximum(x_0, 0)
-
-    def query(self, x_0):
-        return x_0, []
