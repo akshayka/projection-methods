@@ -155,15 +155,17 @@ def main():
     if isinstance(problem, SCSProblem):
         data['kappa'] = problem.kappa(it[-1])
         data['tau'] = problem.tau(it[-1])
-        if data['tau'] > -1e-6 and np.isclose(data['kappa'], 0):
+        if data['tau'] > -1e-6 and np.isclose(data['kappa'], 0, atol=1e-4):
             data['case'] = 'primal_dual_optimal'
-        elif np.isclose(data['tau'], 0) and data['kappa'] > 1e-6:
+        elif np.isclose(data['tau'], 0, atol=1e-4) and data['kappa'] > 1e-6:
             data['case'] = 'infeasible'
         else:
             data['case'] = 'indeterminate'
-        data['obj_val'] = problem.objective_value(problem.p(it[-1]))
+        data['obj_val'] = (problem.objective_value(problem.p(it[-1])) /
+            data['tau']) if data['tau'] != 0 else None
         data['opt_val'] = problem.optimal_value()
         data['primal_res'] = data['obj_val'] - data['opt_val']
+        data['rel_error'] = abs(data['primal_res']) / abs(data['opt_val'])
 
     with open(fn, 'wb') as f:
         cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
