@@ -21,7 +21,7 @@ def main():
         'shown but not saved.'))
     # --- plot settings --- #
     parser.add_argument(
-        '-t', '--title', type=str, default='Residuals for feasibility problem.',
+        '-t', '--title', type=str, default='Residuals for feasibility problem',
         help='plot title')
     args = vars(parser.parse_args())
 
@@ -48,10 +48,13 @@ def main():
         it = range(len(res))
         if len(res) > max_its:
             max_its = len(res)
-        plt.plot(it, res, '-o', label=d['name'])
+        plt.plot(it, res, label=d['name'])
     plt.semilogy()
-    plt.xticks(range(0, max_its+1, 1))
+    step = int(max_its / 10)
+    plt.xticks(range(0, max_its+1, step))
     plt.title(args['title']) 
+    plt.ylabel('residual')
+    plt.xlabel('iterations')
     plt.legend()
 
     if args['output'] is not None:
