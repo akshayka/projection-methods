@@ -2,6 +2,7 @@ import argparse
 import cPickle
 import logging
 import os
+import numpy as np
 import time
 
 from projection_methods.algorithms.altp import AltP
@@ -10,6 +11,7 @@ from projection_methods.algorithms.apop import APOP
 from projection_methods.algorithms.dykstra import Dykstra
 from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
+from projection_methods.problems.problems import SCSProblem
 
 
 k_alt_p = 'altp'
@@ -149,6 +151,20 @@ def main():
     name = args['name'] if len(args['name']) > 0 else args['solver']
     data = {'it': it, 'res': res, 'status': status,
             'problem': args['problem'], 'name': name, 'solver': args['solver']}
+
+    if isinstance(problem, SCSProblem):
+        data['kappa'] = problem.kappa(it[-1])
+        data['tau'] = problem.tau(it[-1])
+        if data['tau'] > -1e-6 and np.isclose(data['kappa'], 0):
+            data['case'] = 'primal_dual_optimal'
+        elif np.isclose(data['tau'], 0) and data['kappa'] > 1e-6:
+            data['case'] = 'infeasible'
+        else:
+            data['case'] = 'indeterminate'
+        data['objective_value'] = problem.objective_value(problem.p(it[-1]))
+        data['optimal_value'] = problem.optimal_value()
+        data['primal_residual'] = data['objective'] - data['optimal_value']
+
     with open(fn, 'wb') as f:
         cPickle.dump(data, f, protocol=cPickle.HIGHEST_PROTOCOL)
     last_res = sum(res[-1]) if hasattr(res[-1], '__iter__') else res[-1]
