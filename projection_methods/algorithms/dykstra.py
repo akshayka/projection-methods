@@ -43,7 +43,7 @@ class Dykstra(Optimizer):
             residuals.append(self._compute_residual(
                 self.b[n-1], left_set, right_set))
             if self.verbose:
-                print '\tresidual: %f' % sum(residuals[-1])
+                print '\tresidual: %e' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 if not self.do_all_iters:

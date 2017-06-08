@@ -85,7 +85,7 @@ class APOP(Optimizer):
 
             residuals.append(self._compute_residual(x_k, y_k, z_k))
             if self.verbose:
-                print '\tresidual: %f' % sum(residuals[-1])
+                print '\tresidual: %e' % sum(residuals[-1])
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 if not self.do_all_iters:
