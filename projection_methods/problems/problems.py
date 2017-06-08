@@ -144,30 +144,32 @@ class SCSProblem(FeasibilityProblem):
         return self.c.dot(self.p_opt) if self.p_opt is not None else None
 
     # utility functions for extracting the individual components of (u, v);
-    # recall that u := (p, y, tau), v := (r, s, kappa)
+    #
+    # recall that u := (p, y, tau)
     def p(self, uv):
-        assert uv.shape == self.dimension
+        assert uv.shape == (self.dimension,)
         return uv[self.product_set.slices[0]]
 
     def y(self, uv):
-        assert uv.shape == self.dimension
+        assert uv.shape == (self.dimension,)
         return uv[self.product_set.slices[1]]
 
     def tau(self, uv):
-        assert uv.shape == self.dimension
-        return uv[self.product_set.slices[2]]
+        assert uv.shape == (self.dimension,)
+        return float(uv[self.product_set.slices[2]])
 
+    # v := (r, s, kappa)
     def r(self, uv):
-        assert uv.shape == self.dimension
+        assert uv.shape == (self.dimension,)
         return uv[self.product_set.slices[3]]
 
     def s(self, uv):
-        assert uv.shape == self.dimension
+        assert uv.shape == (self.dimension,)
         return uv[self.product_set.slices[4]]
 
     def kappa(self, uv):
-        assert uv.shape == self.dimension
-        return uv[self.product_set.slices[5]]
+        assert uv.shape == (self.dimension,)
+        return float(uv[self.product_set.slices[5]])
 
 
     def __repr__(self):
