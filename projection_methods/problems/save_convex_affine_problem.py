@@ -4,9 +4,10 @@ import sys
 
 import cvxpy
 
+import projection_methods.oracles.soc as soc
+from projection_methods.oracles.nonneg import NonNeg
 from projection_methods.oracles.reals import Reals
 from projection_methods.oracles.zeros import Zeros
-import projection_methods.oracles.soc as soc
 
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.problems.problem_factory import convex_affine_problem
@@ -15,7 +16,8 @@ from projection_methods.problems.problem_factory import convex_affine_problem
 REALS = 'R'
 ZEROS = 'Z'
 SEC_ORD_CONE = 'SOC'
-SETS = {REALS: Reals, ZEROS: Zeros, SEC_ORD_CONE: soc.SOC}
+NN = 'NN'
+SETS = {REALS: Reals, ZEROS: Zeros, SEC_ORD_CONE: soc.SOC, NN: NonNeg}
 
 def die_if(cond, msg):
     if cond:
