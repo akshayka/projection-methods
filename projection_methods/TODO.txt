@@ -1,25 +1,18 @@
 - redo old experiments (SOC, R) [i.e., no zero cones]
 - implement good diagonal scaling of data matrices
-- implement SCS problem in problem_factory
 
 - over-relaxation
 - over-projection
 - line search
 - multiple state variables
 
-** check values of kappa and tau **
---- why on earth would tau == 0, kappa > 0, but c.t(x) + b.t(y) < 0? that cannot
-    happen.
-    
 
-** why do residuals increase for the random_socp problem?! **
----- perhaps I introduced a bug in my recently added code
----- check nonneg.py, for example
+*** Implement ADMM as per SCS ***
+----- apply to the random cone program
+----- compare with AP/Dykstra
 
-
-*** Why are some problems (1000_s.pkl, for example) solved after just one
-    iteration? ***
-----  I suppose the initial iterate was in fact in the SOC.
+*** Scale to larger problems ***
+----- for example, the "small" random problem in the SCS paper
 
 *** What's the deal with zero cones? can't we just do a presolve and get rid
     of variables that are known to be zero? ***
@@ -28,6 +21,7 @@
       zero cones are eliminated).
 ----- double check with boyd that eliminating zero cones in outer projection is
       fine
+----- Boyd did say that we could probably eliminate the zero cones
 
 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 completed tasks
@@ -35,7 +29,25 @@ completed tasks
 - write plotting code
 - implement projection onto affine set as a (factorized) sparse matrix solve
 - cook up harder problems (convergence should not happen after one iteration!)
+- implement SCS problem in problem_factory
 
+*** Why are some problems (1000_s.pkl, for example) solved after just one
+    iteration? ***
+----  I suppose the initial iterate was in fact in the SOC.
+> 1000_s was solved in one iteration because there was exactly one solution;
+> the others may have simply been too easy
+
+** check values of kappa and tau **
+--- why on earth would tau == 0, kappa > 0, but c.t(x) + b.t(y) < 0? that cannot
+    happen.
+> done; this was a bug in my generation of random cone programs (Q_tilde was
+> wrong)
+
+** why do residuals increase for the random_socp problem?! **
+---- perhaps I introduced a bug in my recently added code
+---- check nonneg.py, for example
+> done; same as above
+    
 *** If a portion of x lies in the zero cone, can we add that constraint to
     for exaple our outer projections and still solve them efficiently?
 ----- sure; this just amounts to eliminating some variables, I think.
