@@ -1,5 +1,4 @@
 - redo old experiments (SOC, R) [i.e., no zero cones]
-- implement good diagonal scaling of data matrices
 
 - over-relaxation
 - over-projection
@@ -7,9 +6,17 @@
 - multiple state variables
 
 
-*** Implement ADMM as per SCS ***
+*** Remove circular import between zeros, reals *** [P0]
+
+*** Root-cause bug that results in objective value < optimal value of SCS ** [P0]
+----- see bugs.txt
+
+*** implement good diagonal scaling of data matrices *** [P1]
+----- This may improve convergence rates
+
+*** Implement ADMM as per SCS *** [P1]
 ----- apply to the random cone program
------ compare with AP/Dykstra
+----- compare with AP/Dykstra [P1]
 
 *** Scale to larger problems ***
 ----- for example, the "small" random problem in the SCS paper
