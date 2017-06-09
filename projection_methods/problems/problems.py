@@ -3,7 +3,7 @@ from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.oracles.nonneg import NonNeg
 from projection_methods.oracles.reals import Reals
-from projection_methods.oracles.soc import SOC
+from projection_methods.oracles.cone import Cone
 from projection_methods.oracles.zeros import Zeros
 
 
@@ -106,18 +106,15 @@ class SCSProblem(FeasibilityProblem):
             raise ValueError('Feasibility problems must be cast as finding a '
                 'point in the intersection of _exactly_ two convex sets.')
 
-        # Ensure that the cartesian product is in the correct form;
-        # sets[1], sets[4] may be any cones.
-        # TODO(akshayka): impelemnt a cone class chance isinstance(., SOC)
-        # to isinstance(., cone)
+        # Ensure that the cartesian product is in the correct form
         assert isinstance(sets[0], CartesianProduct)
         self.product_set = sets[0]
         assert len(self.product_set.sets) == 6
         assert isinstance(self.product_set.sets[0], Reals)
-        assert isinstance(self.product_set.sets[1], SOC)
+        assert isinstance(self.product_set.sets[1], Cone)
         assert isinstance(self.product_set.sets[2], NonNeg)
         assert isinstance(self.product_set.sets[3], Zeros)
-        assert isinstance(self.product_set.sets[4], SOC)
+        assert isinstance(self.product_set.sets[4], Cone)
         assert isinstance(self.product_set.sets[5], NonNeg)
 
         assert isinstance(sets[1], AffineSet)

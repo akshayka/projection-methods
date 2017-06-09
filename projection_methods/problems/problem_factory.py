@@ -13,7 +13,16 @@ from projection_methods.problems.problems import FeasibilityProblem
 from projection_methods.problems.problems import SCSProblem
 
 
-def random_cone_program(x, m, n, density=0.01):
+def get_slices(dims):
+    slices = []
+    left = 0
+    for d in dims:
+        right = left + d
+        slices.append(slice(left, right))
+        left = right
+    return slices
+
+def random_cone_program(x, cone_dims, cones, n, density=0.01):
     """Generates a random second-order cone program in SCS form
 
     Generates a random feasibility problem in the style of the splitting
@@ -23,42 +32,55 @@ def random_cone_program(x, m, n, density=0.01):
     the solution to a problem returned by this function is not unique. The
     returned problem is always feasible.
 
+    Recall that x = (u, v) = (p, y, tau, r, s, kappa)
+                         \in (R^n, K^*, R_+, {0}^n, K, R_+).
+
     Args:
         x (cvxpy.Variable): The variable to constrain (corresponds to (u, v));
             x _must_ be of shape (2 * (m + n + 1), 1).
-        m (int): the number of constraints
-        n (int): the number of variables; at most m
+        cone_dims (list of int): list of dimensions of each cone
+        cones (list of Cone classes): list of Cone classes, where each class
+            is one of {NonNeg, Reals, Zeros, or SOC}
+        n (int): the number of variables in p; at most m
         density (float): the density of A; a number in (0, 1]
         
     Returns:
         SCSProblem: a random, feasible SCSProblem
     """
-    # Construct the cartesian product: (u, v) \in product 'classes', below
+    # Construct the variable x = (u, v) and partition it into its components
+    m = sum(cone_dims)
     assert m >= n
-    dims = [n, m, 1, n, m, 1]
-    assert x.size == (sum(dims), 1)
-    #          0      1    2       3      4    5
-    classes = [Reals, SOC, NonNeg, Zeros, SOC, NonNeg]
-    sets = []
-    slices = []
-    left = 0
-    for d, cls in zip(dims, classes):
-        right = left + d
-        slx = slice(left, right)
-        slices.append(slx)
-        sets.append(cls(x[slx]))
-        left = right
-    product_set = CartesianProduct(sets, slices)
+    #          0  1  2  3  4  5
+    #          p  y tau r  s kappa
+    uv_dims = [n, m, 1, n, m, 1]
+    assert x.size == (sum(uv_dims), 1)
+    uv_slices = get_slices(uv_dims)
+    uv_vars = [x[slx] for slx in uv_slices]
 
-    cone = sets[4]
-    # TODO(akshayka): Remove this assert when past debugging phase.
-    assert isinstance(cone, SOC)
+    # Construct the cones K, K*
+    # note that s := uv_vars[4]
+    cone_slices = get_slices(cone_dims)
+    cone_sets = [cls(uv_vars[4][slx]) for cls, slx in zip(cones, cone_slices)]
+    K = CartesianProduct(cone_sets, cone_slices)
+    K_star = K.dual(uv_vars[1])
+
+    # Constrain each variable in (u, v) to lie in its corresponding cone
+    uv_sets = [None] * len(uv_vars)
+    uv_sets[0] = Reals(uv_vars[0])
+    uv_sets[1] = K_star
+    uv_sets[2] = NonNeg(uv_vars[2])
+    uv_sets[3] = Zeros(uv_vars[3])
+    uv_sets[4] = K
+    uv_sets[5] = NonNeg(uv_vars[5])
     
+    # Finally, create the cartesian product for (u, v)
+    product_set = CartesianProduct(uv_sets, uv_slices)
+
     # Construct members of the optimal set, problem data, and the optimal value;
     # recall that (u, v) := (p, y, tau, r, s, kappa). First generate s, by
     # projecting onto the cone, and y, by Moreau.
     z = np.random.randn(m)
-    s = cone.project(z)
+    s = K.project(z)
     y = s - z 
 
     # Randomly generate the data matrix
@@ -69,7 +91,7 @@ def random_cone_program(x, m, n, density=0.01):
     p = np.random.randn(n)
     b = A.dot(p) + s
     c = -A.T.dot(y)
-        
+
     # Construct the augmented KKT matrix
     cm = np.matrix(c).T
     bm = np.matrix(b).T
