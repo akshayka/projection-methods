@@ -26,7 +26,6 @@ class AffineSet(ConvexSet):
             b (numpy.ndarray): a target vector
         """
         assert A.shape[1] == x.size[0]
-        self.x_dim = x.size[0]
         constr = [A * x == b]
         self.A = A
         self.b = b
@@ -60,7 +59,7 @@ class AffineSet(ConvexSet):
             self._kkt_solver = self._make_kkt_solver()
         target = np.hstack((x_0, self.b))
         sol = self._kkt_solver(target)
-        return sol[:self.x_dim]
+        return sol[:self._shape[0]]
         
 
     def query(self, x_0):

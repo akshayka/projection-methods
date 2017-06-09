@@ -15,11 +15,10 @@ class Projectable(object):
         """
         assert type(x) == Variable or type(x) == index
         self._x = x
-        if type(self._x) == index:
-            self._var = self._x.args[0]
-            assert type(self._var) == Variable
-        else:
-            self._var = self._x
+        self._shape = self._x.size
+
+        assert len(self._x.variables()) == 1
+        self._var = self._x.variables()[0]
 
         self._constr = constr
         variables = set([v for c in constr for v in c.variables()])
