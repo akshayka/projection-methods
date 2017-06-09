@@ -1,11 +1,12 @@
 import numpy as np
 import scipy.sparse
 
-from projection_methods.oracles.convex_set import ConvexSet
+from projection_methods.oracles.cone import Cone
+from projection_methods.oracles.reals import Reals
 from projection_methods.projectables.hyperplane import Hyperplane
 
 
-class Zeros(ConvexSet):
+class Zeros(Cone):
     """A (trivial) oracle for \{0\}^n"""
     def __init__(self, x):
         """
@@ -22,6 +23,9 @@ class Zeros(ConvexSet):
 
     def project(self, x_0):
         return x_0 if self.contains(x_0) else np.zeros(x_0.shape)
+
+    def dual(self, x):
+        return Reals(x)
 
     def query(self, x_0):
         x_star = self.project(x_0) 

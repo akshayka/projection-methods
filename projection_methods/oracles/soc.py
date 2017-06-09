@@ -1,10 +1,10 @@
 import cvxpy
 import numpy as np
 
-from projection_methods.oracles.convex_set import ConvexSet
+from projection_methods.oracles.cone import Cone
 
 
-class SOC(ConvexSet):
+class SOC(Cone):
     """An oracle for second order cones
 
     Defines an oracle for the second order cone, i.e.,
@@ -41,3 +41,6 @@ class SOC(ConvexSet):
             return x_0
         else:
             return 0.5 * (1 + t/norm_z) * np.append(z, norm_z)
+
+    def dual(self, x):
+        return SOC(x)

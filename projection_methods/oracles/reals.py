@@ -1,7 +1,8 @@
-from projection_methods.oracles.convex_set import ConvexSet
+from projection_methods.oracles.cone import Cone
+from projection_methods.oracles.zeros import Zeros
 
 
-class Reals(ConvexSet):
+class Reals(Cone):
     """A (trivial) oracle for R^n"""
     def __init__(self, x):
         """
@@ -17,6 +18,9 @@ class Reals(ConvexSet):
 
     def project(self, x_0):
         return x_0
+
+    def dual(self, x):
+        return Zeros(x)
 
     def query(self, x_0):
         return x_0, []

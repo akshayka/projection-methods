@@ -1,17 +1,18 @@
+import copy
 import numpy as np
 
-from projection_methods.oracles.convex_set import ConvexSet
+from projection_methods.oracles.cone import Cone
 
 
-class CartesianProduct(ConvexSet):
-    """An oracle for cartesion products of convex sets
+class CartesianProduct(Cone):
+    """An oracle for cartesion products of cones
 
     Defines an oracle for the Cartesian product of an arbitrary
-    number of convex sets :math:`C_1, C_2, \ldots, C_n`, i.e.,
+    number of cones C_1, C_2, \ldots, C_n, i.e.,
         S := C_1 \times C_2 \times \ldots \times C_n
 
     Attributes:
-        sets (list of ConvexSet): sets C_1, \ldots, C_n
+        sets (list of Cone): sets C_1, \ldots, C_n
         slices (list of slice): if the Cartesian product lies in
             R^d, then slices[i] is the slice of [0 ... d-1] that
             corresponds to C_i. For example, if n == 2 and
@@ -24,9 +25,12 @@ class CartesianProduct(ConvexSet):
     def __init__(self, sets, slices):
         """
         Args:
-            sets (list of ConvexSet): as per attribute
+            sets (list of Cone): as per attribute
             slices (list of slice): as per at atribute
         """
+        for s in sets:
+            assert isinstance(s, Cone)
+
         self.sets = sets
         self.slices = slices
         x = self.sets[0]._var
@@ -39,12 +43,19 @@ class CartesianProduct(ConvexSet):
         for s, slx in zip(self.sets, self.slices):
             x_star[slx] = s.project(x_0[slx])
         return x_star
-        
+
+
+    def dual(self, x):
+        cones = []
+        for s, slx in zip(self.sets, self.slices):
+            cones.append(s.dual(x[slx]))
+        return CartesianProduct(cones, copy.copy(self.slices))
+            
     
     def query(self, x_0):
         """As ConvexSet.query, but returns a list of Halfspaces/Hyperplanes
 
-        Computes a halfspace/hyperplane for each convex set C_i in the
+        Computes a halfspace/hyperplane for each cone C_i in the
         Cartesian product, instead of a single halfspace/hyperplanes for the
         entire set
 
