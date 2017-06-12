@@ -1,5 +1,4 @@
 from projection_methods.oracles.cone import Cone
-from projection_methods.oracles.zeros import Zeros
 
 
 class Reals(Cone):
