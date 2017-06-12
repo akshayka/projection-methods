@@ -6,24 +6,19 @@
 - multiple state variables
 
 
-*** Core dump when running apop avg on znss_m_2000_n_1000.pkl ***
+*** Implement linear program a la SCS embedding *** [P0]
 
-*** Root-cause bug that results in objective value < optimal value of SCS ** [P0]
------ see bugs.txt
------ Note that a single SOC still works (obj value >= opt value)
-
-*** implement good diagonal scaling of data matrices *** [P1]
------ This may improve convergence rates
+*** Root-cause core dump when running apop avg on znss_m_2000_n_1000.pkl *** [P1]
 
 *** Implement ADMM as per SCS *** [P1]
 ----- apply to the random cone program
 ----- compare with AP/Dykstra [P1]
 
-*** Scale to larger problems ***
+*** Scale to larger problems *** [P3]
 ----- for example, the "small" random problem in the SCS paper
 
 *** What's the deal with zero cones? can't we just do a presolve and get rid
-    of variables that are known to be zero? ***
+    of variables that are known to be zero? *** [P2]
 ----- perhaps eliminating it breaks the avoidance of zero (ie, perhaps iterates
       may converge to zero, even if a non-zero solution exists, when the
       zero cones are eliminated).
@@ -38,6 +33,13 @@ completed tasks
 - implement projection onto affine set as a (factorized) sparse matrix solve
 - cook up harder problems (convergence should not happen after one iteration!)
 - implement SCS problem in problem_factory
+
+*** Root-cause bug that results in objective value < optimal value (SCS) *** [P0]
+----- see bugs.txt
+----- Note that a single SOC still works (obj value >= opt value)
+> it appears that this issue is not really an issue -- if the objective
+> value < optimal value, it must be the case that the iterate in question
+> is not feasible; that is what appeared to happen
 
 *** Why are some problems (1000_s.pkl, for example) solved after just one
     iteration? ***
