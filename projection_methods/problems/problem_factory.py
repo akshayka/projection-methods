@@ -6,9 +6,8 @@ import scipy.sparse.linalg
 from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.oracles.nonneg import NonNeg
-from projection_methods.oracles.reals import Reals
 from projection_methods.oracles.soc import SOC
-from projection_methods.oracles.zeros import Zeros
+from projection_methods.oracles.zeros import Reals, Zeros
 from projection_methods.problems.problems import FeasibilityProblem
 from projection_methods.problems.problems import SCSProblem
 
@@ -50,6 +49,7 @@ def random_cone_program(x, cone_dims, cones, n, density=0.01):
     # Construct the variable x = (u, v) and partition it into its components
     m = sum(cone_dims)
     assert m >= n
+
     #          0  1  2  3  4  5
     #          p  y tau r  s kappa
     uv_dims = [n, m, 1, n, m, 1]

@@ -2,9 +2,8 @@ from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.oracles.nonneg import NonNeg
-from projection_methods.oracles.reals import Reals
 from projection_methods.oracles.cone import Cone
-from projection_methods.oracles.zeros import Zeros
+from projection_methods.oracles.zeros import Reals, Zeros
 
 
 class FeasibilityProblem(object):
@@ -142,6 +141,7 @@ class SCSProblem(FeasibilityProblem):
 
     # utility functions for extracting the individual components of (u, v);
     #
+    # TODO(akshayka): utility functions to scale variables by tau / kappa
     # recall that u := (p, y, tau)
     def p(self, uv):
         assert uv.shape == (self.dimension,)

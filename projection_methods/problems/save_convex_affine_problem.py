@@ -6,8 +6,7 @@ import cvxpy
 
 import projection_methods.oracles.soc as soc
 from projection_methods.oracles.nonneg import NonNeg
-from projection_methods.oracles.reals import Reals
-from projection_methods.oracles.zeros import Zeros
+from projection_methods.oracles.zeros import Reals, Zeros
 
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.problems.problem_factory import convex_affine_problem
