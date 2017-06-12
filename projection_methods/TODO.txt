@@ -6,10 +6,11 @@
 - multiple state variables
 
 
-*** Remove circular import between zeros, reals *** [P0]
+*** Core dump when running apop avg on znss_m_2000_n_1000.pkl ***
 
 *** Root-cause bug that results in objective value < optimal value of SCS ** [P0]
 ----- see bugs.txt
+----- Note that a single SOC still works (obj value >= opt value)
 
 *** implement good diagonal scaling of data matrices *** [P1]
 ----- This may improve convergence rates
