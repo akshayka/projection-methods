@@ -32,22 +32,6 @@ k_outers = {
 }
 
 
-# TODO(akshayka): This is a major hack. Pickling the feasibility problem
-# appears to corrupt ... something. In particular, the first call to project
-# on an AffineSet fails with "column index exceeds matrix dimensions." A
-# workaround that, well, works, is to re-instantiate the AffineSet (my guess
-# is that this is symptomatic of a bug in CVXPY related to constraints).
-# Note that if the other set contains a data matrix, then likely the
-# first projection onto it will also fail. A hack to fix this would simply
-# by to project onto each set exactly once within a try/except block, and
-# to ignore the exception.
-def warm_up(problem):
-    for i, s in enumerate(problem.sets):
-        if type(s) == AffineSet:
-            s = AffineSet(s._x, s.A, s.b)
-            problem.sets[i] = s
-
-
 def main():
     example =\
     """example usage:
@@ -146,7 +130,6 @@ def main():
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 
-    warm_up(problem)
     it, res, status = solver.solve(problem)
     name = args['name'] if len(args['name']) > 0 else args['solver']
     data = {'it': it, 'res': res, 'status': status,
