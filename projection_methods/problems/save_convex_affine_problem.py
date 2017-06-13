@@ -4,12 +4,12 @@ import sys
 
 import cvxpy
 
-import projection_methods.oracles.soc as soc
-from projection_methods.oracles.nonneg import NonNeg
-from projection_methods.oracles.zeros import Reals, Zeros
-
 from projection_methods.oracles.cartesian_product import CartesianProduct
+from projection_methods.oracles.nonneg import NonNeg
+import projection_methods.oracles.soc as soc
+from projection_methods.oracles.zeros import Reals, Zeros
 from projection_methods.problems.problem_factory import convex_affine_problem
+from projection_methods.problems.utils import die_if, save_problem
 
 
 REALS = 'R'
@@ -17,11 +17,6 @@ ZEROS = 'Z'
 SEC_ORD_CONE = 'SOC'
 NN = 'NN'
 SETS = {REALS: Reals, ZEROS: Zeros, SEC_ORD_CONE: soc.SOC, NN: NonNeg}
-
-def die_if(cond, msg):
-    if cond:
-        print 'Error: ' + msg
-        sys.exit(1)
 
 # Read in the output path.
 path = PosixPath(raw_input(
@@ -65,11 +60,4 @@ density = float(raw_input('Please enter the desired density of A '
 
 # Construct the problem
 problem = convex_affine_problem(C, (rows, total_dim), density)
-
-with path.open('wb') as f:
-    cPickle.dump(problem, f, protocol=cPickle.HIGHEST_PROTOCOL)
-
-with open(str(path) + '.txt', 'wb') as f:
-    f.write(str(problem))
-
-print 'Saved problem at ' + str(path)
+save_problem(path, problem)
