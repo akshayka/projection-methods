@@ -6,8 +6,6 @@
 - multiple state variables
 
 
-*** Implement linear program a la SCS embedding *** [P0]
-
 *** Root-cause core dump when running apop avg on znss_m_2000_n_1000.pkl *** [P1]
 
 *** Implement ADMM as per SCS *** [P1]
@@ -33,6 +31,8 @@ completed tasks
 - implement projection onto affine set as a (factorized) sparse matrix solve
 - cook up harder problems (convergence should not happen after one iteration!)
 - implement SCS problem in problem_factory
+
+*** Implement linear program a la SCS embedding *** [P0]
 
 *** Root-cause bug that results in objective value < optimal value (SCS) *** [P0]
 ----- see bugs.txt

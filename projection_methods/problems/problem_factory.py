@@ -11,7 +11,7 @@ from projection_methods.oracles.zeros import Reals, Zeros
 from projection_methods.problems.problems import FeasibilityProblem
 from projection_methods.problems.problems import SCSProblem
 
-
+# TODO(akshayka): Move this into a utils file
 def get_slices(dims):
     slices = []
     left = 0
@@ -21,10 +21,11 @@ def get_slices(dims):
         left = right
     return slices
 
-def random_cone_program(x, cone_dims, cones, n, density=0.01):
-    """Generates a random second-order cone program in SCS form
 
-    Generates a random feasibility problem in the style of the splitting
+ def cone_program(x, cone_dims, cones, n, A):
+    """Generates a second-order cone program in SCS form with data matrix A
+
+    Generates a feasibility problem in the style of the splitting
     conic solver (SCS; see http://web.stanford.edu/~boyd/papers/scs.html).
 
     Note that this problem _always_ admits zero as a solution, so in general
@@ -41,10 +42,11 @@ def random_cone_program(x, cone_dims, cones, n, density=0.01):
         cones (list of Cone classes): list of Cone classes, where each class
             is one of {NonNeg, Reals, Zeros, or SOC}
         n (int): the number of variables in p; at most m
-        density (float): the density of A; a number in (0, 1]
+        A (np.matrx or scipy.sparse matrix): data matrix A
         
     Returns:
-        SCSProblem: a random, feasible SCSProblem
+        SCSProblem: a feasible SCSProblem defined by cones and A; b is chosen
+                    such that the problem is feasible
     """
     # Construct the variable x = (u, v) and partition it into its components
     m = sum(cone_dims)
@@ -83,10 +85,6 @@ def random_cone_program(x, cone_dims, cones, n, density=0.01):
     s = K.project(z)
     y = s - z 
 
-    # Randomly generate the data matrix
-    A = scipy.sparse.rand(m=m, n=n, density=density, format='csc')
-    A.data = scipy.randn(A.nnz)
-
     # Generate an optimal point p (called 'x' in the SCS paper), and data b, c.
     p = np.random.randn(n)
     b = A.dot(p) + s
@@ -110,8 +108,65 @@ def random_cone_program(x, cone_dims, cones, n, density=0.01):
 
     return SCSProblem(sets=[product_set, affine_set], x_opt=None,
         Q=Q, A=A, b=b, c=c, p_opt=p)
-     
+
+
+def random_matrix(m, n, density):
+    A = scipy.sparse.rand(m=sum(cone_dims), n=n, density=density, format='csc')
+    A.data = scipy.randn(A.nnz)
+    return A
+
+
+def random_cone_program(x, cone_dims, cones, n, density=0.01):
+    """Generates a random second-order cone program in SCS form
+
+    Generates a random feasibility problem in the style of the splitting
+    conic solver; wrapper for cone_program.
+
+    Args:
+        x (cvxpy.Variable): The variable to constrain (corresponds to (u, v));
+            x _must_ be of shape (2 * (m + n + 1), 1).
+        cone_dims (list of int): list of dimensions of each cone
+        cones (list of Cone classes): list of Cone classes, where each class
+            is one of {NonNeg, Reals, Zeros, or SOC}
+        n (int): the number of variables in p; at most m
+        density (float): the density of A; a number in (0, 1]
+
+    Returns:
+        SCSProblem: a random, feasible SCSProblem
+    """
+    A = random_matrix(m=sum(cone_dims), n=n, density=density)
+    return cone_program(x, cone_dims, cones, n, A)
        
+
+def random_linear_program(m, n, density=0.01):
+    """Generates a random linear program in SCS form
+
+    Generates a random linear program of the form
+        min. <c, p>
+        s.t. Gp - h = 0,
+             p >= 0,
+    where A is an m x n matrix. This problem is canonicalized to the cone
+    program
+        min. <c, p>
+        s.t. [G; -G; I] * p + s = 0,
+             s \in NonNeg(3 * n)
+    Args:
+        m (int): number of rows in A
+        n (int): number of columns in A
+        density (float): the density of A; a number in (0, 1]
+    """
+    # Generate the cone
+    cone_len = 2 * m + n
+    cone = NonNeg(cone_len)
+    # Generate the variable
+    uv_len = 2 * (n + cone_shape + 1)
+    x = cvxpy.Variable(uv_len)
+    # Generate the block matrix
+    G = random_matrix(m=m, n=n, density=density)
+    A = scipy.sparse.bmat([[A], [-A], [scipy.sparse.eye(n)]])
+    return cone_program(x, [cone_len], [cone], n, A)
+
+
 def convex_affine_problem(convex_set, shape, density=0.01):
     """Generates a random feasibility problem w.r.t. a convex and affine set
 
@@ -123,7 +178,6 @@ def convex_affine_problem(convex_set, shape, density=0.01):
         s.t. Ax = b, A full-rank
              x \in C
     
-
     If the convex set is in fact a cross product of some number of cones, then
     the generated problem roughly resembles those solved by SCS.  The returned
     problem is always feasible.
