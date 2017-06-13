@@ -78,3 +78,13 @@ class CartesianProduct(Cone):
         # contain hyperplanes.
         self._halfspaces.extend(hyper_half)
         return x_star, hyper_half
+
+
+    def __repr__(self):
+        string = type(self).__name__ + "\n"
+        string += 'Number of cones: %s\n' % str(len(self.sets))
+        string += 'Dimension: %s\n' % str(self._shape)
+        string += '------- Cones -------\n'
+        for i, c in enumerate(self.sets):
+            string += '%d. %s' % (i+1, c.__repr__())
+        return string

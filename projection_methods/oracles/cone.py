@@ -16,3 +16,9 @@ class Cone(ConvexSet):
            Cone: the dual cone of this cone, in which x is made to reside.
         """
         pass
+
+
+    def __repr__(self):
+        string = "%s [dimension %s]\n" % (type(self).__name__,
+            str(self._shape))
+        return string
