@@ -1,4 +1,4 @@
-import cvxpy as cvx
+import cvxpy
 import numpy as np
 import scipy.sparse
 import scipy.sparse.linalg
@@ -22,7 +22,7 @@ def get_slices(dims):
     return slices
 
 
- def cone_program(x, cone_dims, cones, n, A):
+def cone_program(x, cone_dims, cones, n, A):
     """Generates a second-order cone program in SCS form with data matrix A
 
     Generates a feasibility problem in the style of the splitting
@@ -111,7 +111,7 @@ def get_slices(dims):
 
 
 def random_matrix(m, n, density):
-    A = scipy.sparse.rand(m=sum(cone_dims), n=n, density=density, format='csc')
+    A = scipy.sparse.rand(m=m, n=n, density=density, format='csc')
     A.data = scipy.randn(A.nnz)
     return A
 
@@ -148,23 +148,23 @@ def random_linear_program(m, n, density=0.01):
     where A is an m x n matrix. This problem is canonicalized to the cone
     program
         min. <c, p>
-        s.t. [G; -G; I] * p + s = 0,
-             s \in NonNeg(3 * n)
+        s.t. [G; I] * p + s = 0,
+             s \in Zeros[m] x NonNeg[n]
     Args:
         m (int): number of rows in A
-        n (int): number of columns in A
+        n (int): number of columns in A (the length of p)
         density (float): the density of A; a number in (0, 1]
     """
-    # Generate the cone
-    cone_len = 2 * m + n
-    cone = NonNeg(cone_len)
     # Generate the variable
-    uv_len = 2 * (n + cone_shape + 1)
+    #            Z  NN
+    cone_dims = [m, n]
+    uv_len = 2 * (n + sum(cone_dims) + 1)
     x = cvxpy.Variable(uv_len)
     # Generate the block matrix
     G = random_matrix(m=m, n=n, density=density)
-    A = scipy.sparse.bmat([[A], [-A], [scipy.sparse.eye(n)]])
-    return cone_program(x, [cone_len], [cone], n, A)
+    A = scipy.sparse.bmat([[G], [scipy.sparse.eye(n)]])
+    cones = [Zeros, NonNeg]
+    return cone_program(x=x, cone_dims=cone_dims, cones=cones, n=n, A=A)
 
 
 def convex_affine_problem(convex_set, shape, density=0.01):

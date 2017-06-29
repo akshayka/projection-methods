@@ -35,7 +35,7 @@ def main():
         help='density of data matrix A')
     args = parser.parse_args()
 
-    path = check_path(args.path)
+    path = check_path(args.output)
     dim = 2 * (sum(args.cone_dims) + args.n + 1)
     x = cvxpy.Variable(dim)
 
@@ -44,7 +44,7 @@ def main():
     cones = [k_cones[c] for c in args.cones]
     cone_program = random_cone_program(x=x, cone_dims=args.cone_dims,
         cones=cones, n=args.n, density=args.density)
-    save_problem(path, problem)
+    save_problem(path, cone_program)
         
 
 if __name__ == '__main__':

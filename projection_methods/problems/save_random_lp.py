@@ -16,13 +16,13 @@ def main():
     parser.add_argument(
         'n', metavar='cols', type=int, help='number of variables')
     parser.add_argument(
-        '-d', '--density', type=float, default=.01, help='density of data
-        matrix A')
+        '-d', '--density', type=float, default=.01, help='density of data '
+        'matrix A')
     args = parser.parse_args()
 
-    path = check_path(args.path)
-    lp = random_lp(m=args.m, n=args.n, density=args.density)
-    save_problem(path, problem)
+    path = check_path(args.output)
+    lp = random_linear_program(m=args.m, n=args.n, density=args.density)
+    save_problem(path, lp)
         
 
 if __name__ == '__main__':

@@ -1,5 +1,6 @@
 import cPickle
 from pathlib2 import PosixPath
+import sys
 
 def die_if(cond, msg):
     if cond:
