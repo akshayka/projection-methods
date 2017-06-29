@@ -28,7 +28,7 @@ def main():
     if args['output'] is not None:
         output_path = PosixPath(args['output'] + '.png')
         if output_path.is_file():
-            raise ValueError('Output file % already exists!' % str(output_path))
+            raise ValueError('Output file %s already exists!' % str(output_path))
 
     data_paths = [PosixPath(f) for f in glob(args['data'])]
     data = []
