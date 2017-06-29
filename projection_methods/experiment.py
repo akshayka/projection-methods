@@ -80,7 +80,7 @@ def main():
         'defaults to unlimited.'))
     parser.add_argument(
         '-t', '--theta', type=float, default=1.0,
-        help=('over/under-projection parameter: must be in (0, 2)'))
+        help=('over/under-relaxation: must be in (0, 2)'))
     # --- options shared by at least two solvers --- #
     parser.add_argument(
         '-i', '--max_iters', type=int, default=100,
