@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from projection_methods.algorithms.altp import AltP
+from projection_methods.algorithms.polyak import Polyak
 from projection_methods.algorithms.apop import APOP
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.problems.problems import FeasibilityProblem
@@ -43,7 +44,12 @@ def main():
     solver.solve(problem)
     plot_iterates(solver.all_iterates, 'Alternating Projections')
 
-    solver = APOP(max_iters=max_iters, initial_iterate=initial_iterate)
+    solver = Polyak(max_iters=max_iters, initial_iterate=initial_iterate)
+    it, res, status = solver.solve(problem)
+    plot_iterates(it, 'Polyak\'s acceleration')
+
+    solver = APOP(max_iters=max_iters, initial_iterate=initial_iterate,
+        average=False)
     it, res, status = solver.solve(problem)
     plot_iterates(it, 'APOP')
     plt.title('Motivating APOP: Circles')
