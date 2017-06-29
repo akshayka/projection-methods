@@ -16,6 +16,8 @@ class Projectable(object):
         assert type(x) == Variable or type(x) == index
         self._x = x
         self._shape = self._x.size
+        if len(self._shape) > 1 and self._shape[-1] == 1:
+            self._shape = tuple(i for i in self._shape[:-1])
 
         assert len(self._x.variables()) == 1
         self._var = self._x.variables()[0]
