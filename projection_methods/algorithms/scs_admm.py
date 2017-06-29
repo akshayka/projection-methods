@@ -27,8 +27,7 @@ class SCSADMM(Optimizer):
         # y_k = affine_set.project(x_k)
         # u_k_plus = u_k_plus_tilde - v_k
         # v_k_plus = v_k - u_k_plus_tilde + u_k_plus
-        iterate = (self._initial_iterate if
-            self._initial_iterate is not None else np.ones(problem.dimension))
+        iterate = np.ones(problem.dimension)
         iterates = [iterate]
         residuals = []
 
@@ -62,4 +61,6 @@ class SCSADMM(Optimizer):
             v_k_prime = v_k_tilde - u_k
             uv_k_plus = product_set.project(np.hstack((u_k_prime, v_k_prime)))
             iterates.append(uv_k_plus)
+        # TODO(akshayka): Consider polishing the result at this step, or even
+        # running apop using the final iterate
         return iterates, residuals, status
