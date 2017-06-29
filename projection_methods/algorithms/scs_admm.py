@@ -1,13 +1,16 @@
 import numpy as np
 
+from projection_methods.algorithms.apop import APOP
 from projection_methods.algorithms.optimizer import Optimizer
 from projection_methods.problems.problems import SCSProblem
 
 class SCSADMM(Optimizer):
     def __init__(self,
-            max_iters=100, atol=10e-5, do_all_iters=False, verbose=False):
+            max_iters=100, atol=10e-5, do_all_iters=False, polish=False,
+            verbose=False):
         super(SCSADMM, self).__init__(max_iters, atol, do_all_iters,
             initial_iterate=None, verbose=verbose)
+        self.polish = polish
 
     def _u(self, problem, uv):
         return np.hstack((problem.p(uv), problem.y(uv), problem.tau(uv)))
@@ -63,4 +66,10 @@ class SCSADMM(Optimizer):
             iterates.append(uv_k_plus)
         # TODO(akshayka): Consider polishing the result at this step, or even
         # running apop using the final iterate
+        if self.polish:
+            polisher = APOP(max_iters=100, atol=self.atol, do_all_iters=True,
+                initial_iterate=iterates[-1], average=False, verbose=True)
+            it, res, status = polisher.solve(problem)
+            iterates.extend(it)
+            residuals.extend(res)
         return iterates, residuals, status

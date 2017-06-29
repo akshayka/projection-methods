@@ -85,6 +85,10 @@ def main():
     parser.add_argument(
         '-t', '--theta', type=float, default=1.0,
         help=('over/under-relaxation: must be in (0, 2)'))
+    # --- options for k_scs --- #
+    parser.add_argument(
+        '-p', '--polish', action='store_true',
+        help='polish the result returned by SCS via cutting planes')
     # --- options shared by at least two solvers --- #
     parser.add_argument(
         '-i', '--max_iters', type=int, default=100,
@@ -158,7 +162,7 @@ def main():
             verbose=args['verbose'])
     elif args['solver'] == k_scs:
         solver = SCSADMM(max_iters=args['max_iters'], atol=args['atol'],
-            do_all_iters=args['do_all_iters'],
+            do_all_iters=args['do_all_iters'], polish=args['polish'],
             verbose=args['verbose'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
