@@ -9,6 +9,7 @@ from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.avgp import AvgP
 from projection_methods.algorithms.apop import APOP
 from projection_methods.algorithms.dykstra import Dykstra
+from projection_methods.algorithms.scs_admm import SCSADMM
 from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
 from projection_methods.problems.problems import SCSProblem
@@ -18,7 +19,8 @@ k_alt_p = 'altp'
 k_avg_p = 'avgp'
 k_apop = 'apop'
 k_dykstra = 'dyk'
-k_solvers = frozenset([k_alt_p, k_avg_p, k_apop, k_dykstra])
+k_scs= 'scs'
+k_solvers = frozenset([k_alt_p, k_avg_p, k_apop, k_dykstra, k_scs])
 
 k_exact = 'exact'
 k_elra = 'elra'
@@ -76,6 +78,9 @@ def main():
         '-mhlf', '--max_halfspaces', type=int, default=None,
         help=('maximum number of halfspaces allowed in the outer approx; '
         'defaults to unlimited.'))
+    parser.add_argument(
+        '-t', '--theta', type=float, default=1.0,
+        help=('over/under-projection parameter: must be in (0, 2)'))
     # --- options shared by at least two solvers --- #
     parser.add_argument(
         '-i', '--max_iters', type=int, default=100,
@@ -123,9 +128,13 @@ def main():
             max_halfspaces=args['max_halfspaces'],
             momentum=args['momentum'],
             average=not args['alt'],
+            theta=args['theta'],
             verbose=args['verbose'])
     elif args['solver'] == k_dykstra:
         solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'],
+            do_all_iters=args['do_all_iters'], verbose=args['verbose'])
+    elif args['solver'] == k_scs:
+        solver = SCSADMM(max_iters=args['max_iters'], atol=args['atol'],
             do_all_iters=args['do_all_iters'], verbose=args['verbose'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
@@ -145,7 +154,7 @@ def main():
         else:
             data['case'] = 'indeterminate'
         data['obj_val'] = (problem.objective_value(problem.p(it[-1])) /
-            data['tau']) if data['tau'] != 0 else None
+            data['tau']) if data['tau'] != 0 else float('inf')
         data['opt_val'] = problem.optimal_value()
         data['primal_res'] = data['obj_val'] - data['opt_val']
         data['rel_error'] = abs(data['primal_res']) / abs(data['opt_val'])
