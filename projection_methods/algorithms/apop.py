@@ -3,7 +3,7 @@ import random
 import numpy as np
 
 from projection_methods.algorithms.optimizer import Optimizer
-from projection_methods.algorithms.utils import heavy_ball_update
+from projection_methods.algorithms.utils import heavy_ball_update, relax
 from projection_methods.oracles.convex_set import ConvexOuter
 from projection_methods.oracles.dynamic_polyhedron import DynamicPolyhedron
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
@@ -21,7 +21,7 @@ class APOP(Optimizer):
             max_iters=100, atol=10e-5, do_all_iters=False, initial_iterate=None,
             outer_policy=PolyOuter.EXACT,
             max_hyperplanes=None, max_halfspaces=None,
-            momentum=None, average=True, verbose=False):
+            momentum=None, average=True, theta=1.0, verbose=False):
         super(APOP, self).__init__(max_iters, atol, do_all_iters,
             initial_iterate, verbose)
         if outer_policy not in PolyOuter.POLICIES:
@@ -34,6 +34,10 @@ class APOP(Optimizer):
         self.max_halfspaces = (max_halfspaces if max_halfspaces is not None
             else float('inf'))
         self.momentum = momentum
+        if theta <= 0 or theta >= 2:
+            raise ValueError('relaxation parameter must be in (0, 2); '
+                'received %f' % theta)
+        self.theta = theta
         self.average = average
 
 
@@ -96,10 +100,12 @@ class APOP(Optimizer):
                 print '\tprojecting onto outer approximation ...'
             x_k_plus = self.outer_manager.outer().project(x_k_prime)
 
+            if self.theta != 1.0:
+                x_k_plus = relax(x_k_prime, x_k_plus, self.theta)
             if self.momentum is not None:
-                iterate = heavy_ball_update(
+                x_k_plus = heavy_ball_update(
                     iterates=iterates, velocity=x_k_plus-x_k,
-                    alpha=self.momentum['alpha'],
-                    beta=self.momentum['beta'])
+                    alpha=self.momentum[0],
+                    beta=self.momentum[1])
             iterates.append(x_k_plus)
         return iterates, residuals, status

@@ -113,6 +113,23 @@ def plane_search(iterates, num_iterates, cvxpy_set, cvxpy_var):
     np_dist = np.linalg.norm(opt_point - cvxpy_var.value, 2)
     return opt_point, np_dist
 
+
+def relax(x, pi_x, theta):
+    """Relax a projection
+
+    Compute the relaxed projection of x, given its projection onto some set,
+    defined as x + theta * (pi_x - x), for theta in (0, 2).
+
+    Args:
+        x (array-like float): a vector
+        pi_x (array-like of float): the projection of x onto some set
+        pi_x (float): the relaxation parameter; must be in (0, 2)
+    Returns:
+        array-like: the relaxed projection of x
+    """
+    return x + theta * (pi_x - x)
+
+
 def heavy_ball_update(iterates, velocity, alpha=0.8, beta=0.2):
     """Heavy-ball momentum
     Move with momentum to the next iterate:

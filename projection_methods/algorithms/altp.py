@@ -4,6 +4,7 @@ from projection_methods.algorithms.optimizer import Optimizer
 from projection_methods.algorithms.utils import heavy_ball_update
 
 class AltP(Optimizer):
+    # TODO(akshayka): Add relaxation support.
     def __init__(self,
             max_iters=100, atol=10e-5, do_all_iters=False, initial_iterate=None,
             momentum=None, verbose=False):
