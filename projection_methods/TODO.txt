@@ -1,6 +1,9 @@
 - redo old experiments (SOC, R) [i.e., no zero cones]
 - here's a weird idea: a meta-solver that runs N APOPs in parallel, and each
   APOP shares with the others the cutting planes it recovers.
+- here's another weird idea: merge apop and altpop, in the sense that use
+  both the halfspaces obtained from apop and the halfspaces obtained from
+  altpop
 
 - over-relaxation
 - over-projection
@@ -15,10 +18,6 @@
 *** Change default atol from 1e-4 to 1e-3 in experiment.py *** [P1]
 
 *** Root-cause core dump when running apop avg on znss_m_2000_n_1000.pkl *** [P1]
-
-*** Implement ADMM as per SCS *** [P1]
------ apply to the random cone program
------ compare with AP/Dykstra [P1]
 
 *** Perform a line search during the localization step *** [P2]
 
@@ -42,6 +41,10 @@ completed tasks
 - implement projection onto affine set as a (factorized) sparse matrix solve
 - cook up harder problems (convergence should not happen after one iteration!)
 - implement SCS problem in problem_factory
+
+*** Implement ADMM as per SCS *** [P1]
+----- apply to the random cone program
+----- compare with AP/Dykstra [P1]
 
 *** Implement linear program a la SCS embedding *** [P0]
 
