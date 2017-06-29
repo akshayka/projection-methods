@@ -10,8 +10,12 @@
 - multiple state variables
 - run new LP, make sure cone_dims is right, make sure cones are right
 
+*** Polish the result returned by SCS -- either switch to APOP after
+    sufficient progress has been made, or project onto the cutting planes
+    that were produced during the previous N iterations. *** [P0]
+
 *** Investigate: Can we do things like line searches or keeping multiple states
-    to accelerate APOP further? It is currently worse than ADMM. *** [P0]
+    to accelerate APOP further? It is currently worse than ADMM. *** [P1]
 
 *** Investigate: Can we accelerate ADMM instead of accelerating AP? *** [P1]
 
