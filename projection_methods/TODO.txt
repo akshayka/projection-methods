@@ -1,10 +1,18 @@
 - redo old experiments (SOC, R) [i.e., no zero cones]
+- here's a weird idea: a meta-solver that runs N APOPs in parallel, and each
+  APOP shares with the others the cutting planes it recovers.
 
 - over-relaxation
 - over-projection
-- line search
 - multiple state variables
+- run new LP, make sure cone_dims is right, make sure cones are right
 
+*** Investigate: Can we do things like line searches or keeping multiple states
+    to accelerate APOP further? It is currently worse than ADMM. *** [P0]
+
+*** Investigate: Can we accelerate ADMM instead of accelerating AP? *** [P1]
+
+*** Change default atol from 1e-4 to 1e-3 in experiment.py *** [P1]
 
 *** Root-cause core dump when running apop avg on znss_m_2000_n_1000.pkl *** [P1]
 
@@ -12,8 +20,7 @@
 ----- apply to the random cone program
 ----- compare with AP/Dykstra [P1]
 
-*** Scale to larger problems *** [P3]
------ for example, the "small" random problem in the SCS paper
+*** Perform a line search during the localization step *** [P2]
 
 *** What's the deal with zero cones? can't we just do a presolve and get rid
     of variables that are known to be zero? *** [P2]
@@ -23,6 +30,10 @@
 ----- double check with boyd that eliminating zero cones in outer projection is
       fine
 ----- Boyd did say that we could probably eliminate the zero cones
+
+*** Scale to larger problems *** [P3]
+----- for example, the "small" random problem in the SCS paper
+
 
 ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 completed tasks
