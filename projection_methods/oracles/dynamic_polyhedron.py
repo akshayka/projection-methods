@@ -1,3 +1,5 @@
+import numpy as np
+
 from projection_methods.oracles.oracle import Oracle
 from projection_methods.projectables.hyperplane import Hyperplane
 from projection_methods.projectables.halfspace import Halfspace
@@ -124,13 +126,13 @@ class DynamicPolyhedron(Oracle):
             # eviction policies maintain outer as information is added
             if self.policy == PolyOuter.SUBSAMPLE:
                 if len(self._polyhedron.hyperplanes()) > self.max_hyperplanes:
-                    self._outer_hyperplanes = np.random.choice(
+                    self._outer_hyperplanes = list(np.random.choice(
                         self._polyhedron.hyperplanes(),
-                        size=self.max_hyperplanes, replace=False)
+                        size=self.max_hyperplanes, replace=False))
                 if len(self._polyhedron.halfspaces()) > self.max_halfspaces:
-                    self._outer_halfspaces = np.random.choice(
+                    self._outer_halfspaces = list(np.random.choice(
                         self._polyhedron.halfspaces(),
-                        size=self.max_halfspaces, replace=False)
+                        size=self.max_halfspaces, replace=False))
             return Polyhedron(self._polyhedron._x,
                 self._outer_hyperplanes + self._outer_halfspaces)
 

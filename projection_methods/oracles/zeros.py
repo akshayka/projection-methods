@@ -15,6 +15,11 @@ class Zeros(Cone):
         """
         constr = [x == 0]
         super(Zeros, self).__init__(x, constr)
+        # TODO(akshayka): either zeros should return the constraint only once
+        # and dynamic_polyhedron should have logic for
+        # pinning cutting planes, or zeros should return the constraint
+        # on every call to query and dynamic_polyhedron should have logic
+        # for checking for redundancy
         self._return_zero_constraint = True
 
     def contains(self, x_0, atol=1e-6):

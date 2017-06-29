@@ -33,12 +33,23 @@ class CartesianProduct(Cone):
 
         self.sets = sets
         self.slices = slices
+        # TODO(akshayka): might be returning
+        # incorrect halfspaces? say self.sets[0] has variable
+        # index(index(var)); then the correct "x" to constrain is index(var),
+        # not var ... but is self._x ever used for a cartesian product?
+        # a hacky way to check -- set it to None then run the code
         x = self.sets[0]._var
         constr = [c for s in sets for c in s._constr]
         super(CartesianProduct, self).__init__(x, constr)
+        self._shape = reduce(
+            lambda x, y: tuple(one + two for one, two in zip(x, y)),
+            [s._shape for s in sets])
 
 
     def project(self, x_0):
+        assert self._shape == x_0.shape, \
+            'cone shape (%s) != x_0 shape (%s)' % (
+            str(self._shape), str(x_0.shape))
         x_star = np.zeros(x_0.shape)
         for s, slx in zip(self.sets, self.slices):
             x_star[slx] = s.project(x_0[slx])
