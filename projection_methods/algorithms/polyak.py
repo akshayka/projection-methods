@@ -42,7 +42,7 @@ class Polyak(Optimizer):
             x_k_3 = left_set.project(x_k_2)
 
             lambda_k = (np.linalg.norm(x_k_1 - x_k_2, ord=2)**2) / (
-                np.linalg.dot(x_k_1 - x_k_3, x_k_1 - x_k_2)
+                np.dot(x_k_1 - x_k_3, x_k_1 - x_k_2))
             x_k_4 = x_k_1 + lambda_k * (x_k_3 - x_k_1)
             
             if self.momentum is not None:

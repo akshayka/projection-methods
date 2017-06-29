@@ -9,6 +9,7 @@ from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.avgp import AvgP
 from projection_methods.algorithms.apop import APOP
 from projection_methods.algorithms.dykstra import Dykstra
+from projection_methods.algorithms.polyak import Polyak
 from projection_methods.algorithms.scs_admm import SCSADMM
 from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.dynamic_polyhedron import PolyOuter
