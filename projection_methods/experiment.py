@@ -27,11 +27,13 @@ k_solvers = frozenset([k_alt_p, k_avg_p, k_polyak, k_apop, k_dykstra, k_scs])
 k_exact = 'exact'
 k_elra = 'elra'
 k_erandom = 'erandom'
+k_ereset = 'ereset'
 k_subsample = 'subsample'
 k_outers = {
     k_exact: PolyOuter.EXACT,
     k_elra: PolyOuter.ELRA,
     k_erandom: PolyOuter.ERANDOM,
+    k_ereset: PolyOuter.ERESET,
     k_subsample: PolyOuter.SUBSAMPLE,
 }
 
@@ -97,6 +99,9 @@ def main():
     parser.add_argument(
         '-atol', type=float, default=1e-4,
         help='residual threshold for optimality')
+    parser.add_argument(
+        '-r', '--random_iterate', action='store_true',
+        help='initialize solvers with a random iterate')
 
     args = vars(parser.parse_args())
     logging.basicConfig(
@@ -115,33 +120,46 @@ def main():
     if not os.access(os.path.dirname(fn), os.W_OK):
         raise ValueError('Invalid output path %s' % fn)
 
+    initial_iterate = (np.random.randn(problem.dimension) if
+        args['random_iterate'] else None)
     if args['solver'] == k_alt_p:
         solver = AltP(max_iters=args['max_iters'], atol=args['atol'],
-            do_all_iters=args['do_all_iters'], momentum=args['momentum'],
+            do_all_iters=args['do_all_iters'],
+            initial_iterate=initial_iterate,
+            momentum=args['momentum'],
             verbose=args['verbose'])
     elif args['solver'] == k_avg_p:
         solver = AvgP(max_iters=args['max_iters'], atol=args['atol'],
-            momentum=args['momentum'], verbose=args['verbose'])
+            do_all_iters=args['do_all_iters'],
+            initial_iterate=initial_iterate,
+            momentum=args['momentum'],
+            verbose=args['verbose'])
     elif args['solver'] == k_polyak:
         solver = Polyak(max_iters=args['max_iters'], atol=args['atol'],
-            do_all_iters=args['do_all_iters'], verbose=args['verbose'],
-            momentum=args['momentum'])
+            do_all_iters=args['do_all_iters'],
+            initial_iterate=initial_iterate,
+            momentum=args['momentum'],
+            verbose=args['verbose'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
             do_all_iters=args['do_all_iters'],
             outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
+            initial_iterate=initial_iterate,
             momentum=args['momentum'],
             average=not args['alt'],
             theta=args['theta'],
             verbose=args['verbose'])
     elif args['solver'] == k_dykstra:
         solver = Dykstra(max_iters=args['max_iters'], atol=args['atol'],
-            do_all_iters=args['do_all_iters'], verbose=args['verbose'])
+            do_all_iters=args['do_all_iters'],
+            initial_iterate=initial_iterate,
+            verbose=args['verbose'])
     elif args['solver'] == k_scs:
         solver = SCSADMM(max_iters=args['max_iters'], atol=args['atol'],
-            do_all_iters=args['do_all_iters'], verbose=args['verbose'])
+            do_all_iters=args['do_all_iters'],
+            verbose=args['verbose'])
     else:
         raise ValueError('Invalid solver choice %s' % args['solver'])
 

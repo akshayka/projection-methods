@@ -21,9 +21,9 @@ class PolyOuter(object):
     TODO(akshayka):
         add EMRA: evict most recently added (weird idea)
     """
-    EXACT, ELRA, ERANDOM, SUBSAMPLE = range(4)
-    POLICIES = frozenset([EXACT, ELRA, ERANDOM, SUBSAMPLE])
-    EVICTIONS = frozenset([ELRA, ERANDOM])
+    EXACT, ELRA, ERANDOM, ERESET, SUBSAMPLE = range(5)
+    POLICIES = frozenset([EXACT, ELRA, ERANDOM, ERESET, SUBSAMPLE])
+    EVICTIONS = frozenset([ELRA, ERANDOM, ERESET])
 
 
 class DynamicPolyhedron(Oracle):
@@ -83,9 +83,11 @@ class DynamicPolyhedron(Oracle):
             information = [information]
         for info in information:
             if type(info) == Hyperplane:
-                self._add_hyperplane(info)
+                if self.max_hyperplanes > 0:
+                    self._add_hyperplane(info)
             elif type(info) == Halfspace:
-                self._add_halfspace(info)
+                if self.max_halfspaces > 0:
+                    self._add_halfspace(info)
             else:
                 raise ValueError, "Only Halfspaces or Hyperplanes can be added"
 
@@ -143,9 +145,11 @@ class DynamicPolyhedron(Oracle):
             return items[-max_len:]
         elif self.policy == PolyOuter.ERANDOM:
             evict_index = random.randint(0, max_len - 1)
-            return items[0:evict_index] + items[evict_index + 1:] + [new_item]
+            items[0:evict_index] + items[evict_index + 1:] + [new_item]
+        elif self.policy == PolyOuter.ERESET:
+            return [new_item]
         else:
-            return items + [new_item]
+            raise RuntimeError('_evict invoked, but policy is not an eviction')
 
 
     def _add_hyperplane(self, hyperplane):
