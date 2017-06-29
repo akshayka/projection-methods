@@ -17,10 +17,11 @@ from projection_methods.problems.problems import SCSProblem
 
 k_alt_p = 'altp'
 k_avg_p = 'avgp'
+k_polyak= 'polyak'
 k_apop = 'apop'
 k_dykstra = 'dyk'
 k_scs= 'scs'
-k_solvers = frozenset([k_alt_p, k_avg_p, k_apop, k_dykstra, k_scs])
+k_solvers = frozenset([k_alt_p, k_avg_p, k_polyak, k_apop, k_dykstra, k_scs])
 
 k_exact = 'exact'
 k_elra = 'elra'
@@ -120,6 +121,10 @@ def main():
     elif args['solver'] == k_avg_p:
         solver = AvgP(max_iters=args['max_iters'], atol=args['atol'],
             momentum=args['momentum'], verbose=args['verbose'])
+    elif args['solver'] == k_polyak:
+        solver = Polyak(max_iters=args['max_iters'], atol=args['atol'],
+            do_all_iters=args['do_all_iters'], verbose=args['verbose'],
+            momentum=args['momentum'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
             do_all_iters=args['do_all_iters'],
