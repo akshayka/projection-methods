@@ -15,10 +15,10 @@ class Halfspace(Projectable):
             x (cvxpy.Variable): a symbolic representation of
                 members of the set
             a (array-like): normal vector
-            b (array-like): offset vector
+            b (float): offset, a real number
         """
         self.a = a
-        self.b = b
+        self.b = float(b)
         constr = [a.T * x <= b]
         super(Halfspace, self).__init__(x, constr)
 
@@ -40,4 +40,4 @@ class Halfspace(Projectable):
         return string
         
     def __eq__(self, other):
-        return (self.a == other.a).all() and (self.b == other.b).all()
+        return (self.a == other.a).all() and self.b == other.b
