@@ -15,12 +15,6 @@ class Zeros(Cone):
         """
         constr = [x == 0]
         super(Zeros, self).__init__(x, constr)
-        # TODO(akshayka): either zeros should return the constraint only once
-        # and dynamic_polyhedron should have logic for
-        # pinning cutting planes, or zeros should return the constraint
-        # on every call to query and dynamic_polyhedron should have logic
-        # for checking for redundancy
-        self._return_zero_constraint = True
 
     def contains(self, x_0, atol=1e-6):
         return not np.any(np.absolute(x_0) > atol)
@@ -34,15 +28,13 @@ class Zeros(Cone):
     def query(self, x_0):
         x_star = self.project(x_0) 
         h = []
-        if self._return_zero_constraint:
-            A = scipy.sparse.eye(x_0.shape[0])
-            # This is an abuse of the word hyperplane; this function
-            # actually returns a set of hyperplanes that exactly identifies
-            # the zero set. If added to an outer approximation, the
-            # interpretation is that we are doing a presolve by forcing
-            # x to be 0.
-            h = [Hyperplane(self._x, A, 0)]
-            self._return_zero_constraint = False
+        # This is an abuse of the word hyperplane; this function
+        # actually returns a set of hyperplanes that exactly identifies
+        # the zero set. If added to an outer approximation, the
+        # interpretation is that we are doing a presolve by forcing
+        # x to be 0.
+        A = scipy.sparse.eye(x_0.shape[0])
+        h = [Hyperplane(self._x, A, 0)]
         return x_star, h
 
 
