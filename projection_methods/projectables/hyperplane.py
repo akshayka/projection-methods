@@ -33,7 +33,6 @@ class Hyperplane(Projectable):
         else:
             return super(Hyperplane, self).project(x_0)
 
-
     def __repr__(self):
         string = type(self).__name__ + "\n"
         string += "a: " + str(self.a) + "\n"
@@ -41,4 +40,5 @@ class Hyperplane(Projectable):
         return string
 
     def __eq__(self, other):
-        return (self.a == other.a).all() and self.b == other.b
+        return (np.array_equal(self.a, other.a) and
+            np.array_equal(self.b, other.b))

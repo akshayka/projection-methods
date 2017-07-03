@@ -38,6 +38,7 @@ class Halfspace(Projectable):
         string += "a: " + str(self.a) + "\n"
         string += "b: " + str(self.b)
         return string
-        
+
     def __eq__(self, other):
-        return (self.a == other.a).all() and self.b == other.b
+        return (np.array_equal(self.a, other.a) and
+            np.array_equal(self.b, other.b))
