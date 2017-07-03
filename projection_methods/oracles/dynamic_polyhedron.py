@@ -125,7 +125,6 @@ class DynamicPolyhedron(Oracle):
             len(self._polyhedron.halfspaces()) <= self.max_halfspaces)):
             return self._polyhedron
         else:
-            # eviction policies maintain outer as information is added
             if self.policy == PolyOuter.SUBSAMPLE:
                 if len(self._polyhedron.hyperplanes()) > self.max_hyperplanes:
                     self._outer_hyperplanes = list(np.random.choice(
@@ -135,38 +134,38 @@ class DynamicPolyhedron(Oracle):
                     self._outer_halfspaces = list(np.random.choice(
                         self._polyhedron.halfspaces(),
                         size=self.max_halfspaces, replace=False))
+            # eviction policies maintain outer as information is added
             return Polyhedron(self._polyhedron._x,
                 self._outer_hyperplanes + self._outer_halfspaces)
 
 
-    def _evict(self, items, new_item, max_len):
+    def _evict(self, items, max_len):
         if self.policy == PolyOuter.ELRA:
-            items = items + [new_item]
-            return items[-max_len:]
+            return items[len(items)-max_len+1:]
         elif self.policy == PolyOuter.ERANDOM:
             evict_index = random.randint(0, max_len - 1)
-            items[0:evict_index] + items[evict_index + 1:] + [new_item]
+            items[0:evict_index] + items[evict_index + 1:]
         elif self.policy == PolyOuter.ERESET:
-            return [new_item]
+            return []
         else:
             raise RuntimeError('_evict invoked, but policy is not an eviction')
 
 
     def _add_hyperplane(self, hyperplane):
         if (len(self._outer_hyperplanes) >= self.max_hyperplanes and
-                self.policy in PolyOuter.EVICTIONS):
+                self.policy in PolyOuter.EVICTIONS and
+                hyperplane not in self._outer_hyperplanes):
             self._outer_hyperplanes = self._evict(self._outer_hyperplanes,
-                hyperplane, self.max_hyperplanes)
-        else:
-            self._outer_hyperplanes.append(hyperplane)
+                self.max_hyperplanes)
+        self._outer_hyperplanes.append(hyperplane)
         self._polyhedron.add(hyperplane)
 
 
     def _add_halfspace(self, halfspace):
         if (len(self._outer_halfspaces) >= self.max_halfspaces and
-                self.policy in PolyOuter.EVICTIONS):
+                self.policy in PolyOuter.EVICTIONS and
+                halfspace not in self._outer_halfspaces):
             self._outer_halfspaces = self._evict(self._outer_halfspaces,
-                halfspace, self.max_halfspaces)
-        else:
-            self._outer_halfspaces.append(halfspace)
+                self.max_halfspaces)
+        self._outer_halfspaces.append(halfspace)
         self._polyhedron.add(halfspace)
