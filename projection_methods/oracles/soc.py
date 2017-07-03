@@ -23,10 +23,10 @@ class SOC(Cone):
     def _contains(self, norm_z, t, atol=1e-8):
         return norm_z <= t or np.isclose(norm_z, t, atol=atol)
 
-    def contains(self, x_0, atol=1e-6):
+    def contains(self, x_0, atol=1e-8):
         z = x_0[:-1]
         t = x_0[-1]
-        return self._contains(np.linalg.norm(z, 2), t)
+        return self._contains(np.linalg.norm(z, 2), t, atol=atol)
 
     def project(self, x_0):
         z = x_0[:-1]
