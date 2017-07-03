@@ -8,6 +8,7 @@ import time
 from projection_methods.algorithms.altp import AltP
 from projection_methods.algorithms.avgp import AvgP
 from projection_methods.algorithms.apop import APOP
+from projection_methods.algorithms.meta_apop import MetaAPOP
 from projection_methods.algorithms.dykstra import Dykstra
 from projection_methods.algorithms.polyak import Polyak
 from projection_methods.algorithms.scs_admm import SCSADMM
@@ -20,9 +21,11 @@ k_alt_p = 'altp'
 k_avg_p = 'avgp'
 k_polyak= 'polyak'
 k_apop = 'apop'
+k_meta_apop = 'meta_apop'
 k_dykstra = 'dyk'
 k_scs= 'scs'
-k_solvers = frozenset([k_alt_p, k_avg_p, k_polyak, k_apop, k_dykstra, k_scs])
+k_solvers = frozenset([k_alt_p, k_avg_p, k_polyak, k_apop, k_meta_apop,
+    k_dykstra, k_scs])
 
 k_exact = 'exact'
 k_elra = 'elra'
@@ -146,6 +149,17 @@ def main():
             verbose=args['verbose'])
     elif args['solver'] == k_apop:
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
+            do_all_iters=args['do_all_iters'],
+            outer_policy=k_outers[args['outer']],
+            max_hyperplanes=args['max_hyperplanes'],
+            max_halfspaces=args['max_halfspaces'],
+            initial_iterate=initial_iterate,
+            momentum=args['momentum'],
+            average=not args['alt'],
+            theta=args['theta'],
+            verbose=args['verbose'])
+    elif args['solver'] == k_meta_apop:
+        solver = MetaAPOP(max_iters=args['max_iters'], atol=args['atol'],
             do_all_iters=args['do_all_iters'],
             outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
