@@ -39,4 +39,5 @@ class Halfspace(Projectable):
         string += "b: " + str(self.b)
         return string
         
-
+    def __eq__(self, other):
+        return (self.a == other.a).all() and (self.b == other.b).all()
