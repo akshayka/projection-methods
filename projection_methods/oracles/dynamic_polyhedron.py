@@ -153,8 +153,7 @@ class DynamicPolyhedron(Oracle):
 
     def _add_hyperplane(self, hyperplane):
         if (len(self._outer_hyperplanes) >= self.max_hyperplanes and
-                self.policy in PolyOuter.EVICTIONS and
-                hyperplane not in self._outer_hyperplanes):
+                self.policy in PolyOuter.EVICTIONS):
             self._outer_hyperplanes = self._evict(self._outer_hyperplanes,
                 self.max_hyperplanes)
         self._outer_hyperplanes.append(hyperplane)
@@ -163,8 +162,7 @@ class DynamicPolyhedron(Oracle):
 
     def _add_halfspace(self, halfspace):
         if (len(self._outer_halfspaces) >= self.max_halfspaces and
-                self.policy in PolyOuter.EVICTIONS and
-                halfspace not in self._outer_halfspaces):
+                self.policy in PolyOuter.EVICTIONS):
             self._outer_halfspaces = self._evict(self._outer_halfspaces,
                 self.max_halfspaces)
         self._outer_halfspaces.append(halfspace)
