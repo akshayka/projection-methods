@@ -16,7 +16,7 @@ class Zeros(Cone):
         constr = [x == 0]
         super(Zeros, self).__init__(x, constr)
 
-    def contains(self, x_0, atol=1e-6):
+    def contains(self, x_0, atol=1e-8):
         return not np.any(np.absolute(x_0) > atol)
 
     def project(self, x_0):
@@ -33,6 +33,8 @@ class Zeros(Cone):
         # the zero set. If added to an outer approximation, the
         # interpretation is that we are doing a presolve by forcing
         # x to be 0.
+        # TODO(akshayka): It is not clear to me, at all, whether it is a good
+        # idea to return such a construct.
         A = scipy.sparse.eye(x_0.shape[0])
         h = [Hyperplane(self._x, A, 0)]
         return x_star, h
