@@ -25,11 +25,6 @@ class SCSADMM(Optimizer):
         product_set = problem.sets[0]
         affine_set = problem.sets[1]
             
-        # TODO(akshayka) ... everything else (below code is copied from altp)
-        # u = np.ones, v = np.ones ...
-        # y_k = affine_set.project(x_k)
-        # u_k_plus = u_k_plus_tilde - v_k
-        # v_k_plus = v_k - u_k_plus_tilde + u_k_plus
         iterate = np.ones(problem.dimension)
         iterates = [iterate]
         residuals = []
@@ -42,7 +37,10 @@ class SCSADMM(Optimizer):
             residuals.append(self._compute_residual(
                 uv_k, product_set.project(uv_k), affine_set.project(uv_k)))
             if self.verbose:
-                print '\tresidual: %e' % sum(residuals[-1])
+                r = residuals[-1]
+                print '\tresidual: %e' % sum(r)
+                print '\t\tproduct: %e' % r[0]
+                print '\t\taffine: %e' % r[1]
             if self._is_optimal(residuals[-1]):
                 status = Optimizer.Status.OPTIMAL
                 if not self.do_all_iters:

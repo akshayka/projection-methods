@@ -43,6 +43,7 @@ class Optimizer(object):
 
     def _compute_residual(self, x_k, y_k, z_k):
         """Returns tuple (dist from left set, dist from right set)"""
+        # TODO(akshayka): should these distances be squared? does it matter?
         return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
 
     def _is_optimal(self, r_k):
