@@ -9,6 +9,14 @@
 - over-projection
 - multiple state variables
 - run new LP, make sure cone_dims is right, make sure cones are right
+- tests: dynamic_polyhedron, cartesianproduct
+
+- return halfspaces instead of hyperplanes for the affine set?
+
+*** Experiment: Rerun experiments, keeping the zero hyperplane in the
+dynamic polyhedron *** [P0]
+----- the linear search is way too expensive; is this because of the sparse
+1000 * 1000 matrix?
 
 *** Polish the result returned by SCS -- either switch to APOP after
     sufficient progress has been made, or project onto the cutting planes
@@ -16,6 +24,9 @@
 
 *** Investigate: Can we do things like line searches or keeping multiple states
     to accelerate APOP further? It is currently worse than ADMM. *** [P1]
+
+*** Theorize: Can we incorporate a momentum-like construction into our update
+directions in a principled manner? *** [P2]
 
 *** Add the zero duality gap constraint to the set of hyperplanes when solving
     SCSProblems *** [P1] 
@@ -48,6 +59,12 @@ completed tasks
 - implement projection onto affine set as a (factorized) sparse matrix solve
 - cook up harder problems (convergence should not happen after one iteration!)
 - implement SCS problem in problem_factory
+
+*** Bug fix: the oracle for the zero cone only returns information the first
+time it is queried. thereafter it does not return anything! This should not be
+the case, as we are losing valuable information as a result. The zero cone
+should return the hyperplane every time, and dynamic polyhedron should refuse
+to add a hyperplane / halfspace it already has *** [P0]
 
 *** Implement ADMM as per SCS *** [P1]
 ----- apply to the random cone program
