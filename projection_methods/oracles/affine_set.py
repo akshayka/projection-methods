@@ -62,7 +62,7 @@ class AffineSet(ConvexSet):
         return sol[:self._shape[0]]
         
 
-    def query(self, x_0):
+    def query(self, x_0, data_hyperplanes=False):
         """As ConvexSet.query, but returns a Hyperplane
 
         Args:
@@ -73,19 +73,32 @@ class AffineSet(ConvexSet):
                 in which every point x in the affine set must lie
         """
         x_star = self.project(x_0)
+        if np.array_equal(x_star, x_0):
+            return x_0, []
 
         # a.dot(y - x_star) == 0, for all y in affine set
         # <==> a.dot(y) == a.dot(x_star)
         a = x_0 - x_star
         b = a.dot(x_star)
-        hyperplane = Hyperplane(x=self._x , a=a, b=b) 
-        self._hyperplanes.append(hyperplane)
-        return x_star, [hyperplane]
+        hyperplanes = [Hyperplane(x=self._x , a=a, b=b)]
+
+        if data_hyperplanes:
+            # TODO(akshayka): This is an experiment. It needs to be vetted.
+            # The idea is to throw in hyperplanes that correspond to those
+            # entries with large residuals.
+            r = np.abs(self.A.dot(x_0) - self.b)
+
+            # sort the indices of the residuals in decreasing order
+            # TODO(akshayka): the number of hyperplanes should not be hardcoded
+            r_indices = np.flipud(np.argsort(r))[:25]
+            for idx in r_indices:
+                hyperplanes.append(Hyperplane(x=self._x,
+                    a=self.A.getrow(idx).T, b=self.b[idx]))
+        self._hyperplanes.extend(hyperplanes)
+        return x_star, hyperplanes
 
     def __repr__(self):
         string = type(self).__name__ + '\n'
         string += 'A of shape %s\n' % str(self.A.shape)
         string += 'b of shape %s' % str(self.b.shape)
         return string
-
-

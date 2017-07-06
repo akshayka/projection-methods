@@ -16,7 +16,7 @@ class Zeros(Cone):
         constr = [x == 0]
         super(Zeros, self).__init__(x, constr)
 
-    def contains(self, x_0, atol=1e-8):
+    def contains(self, x_0, atol=1e-6):
         return not np.any(np.absolute(x_0) > atol)
 
     def project(self, x_0):
@@ -26,6 +26,9 @@ class Zeros(Cone):
         return Reals(x)
 
     def query(self, x_0):
+        if self.contains(x_0):
+            return x_0, []
+
         x_star = self.project(x_0) 
         h = []
         # This is an abuse of the word hyperplane; this function

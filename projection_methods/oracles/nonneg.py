@@ -19,7 +19,7 @@ class NonNeg(Cone):
         self._i = 0
 
     def contains(self, x_0, atol=1e-6):
-        return (x_0 >= 0).all()
+        return (x_0 >= -1 * atol).all()
 
     def project(self, x_0):
         return np.maximum(x_0, 0)
