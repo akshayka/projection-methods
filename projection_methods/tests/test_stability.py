@@ -4,6 +4,7 @@ import unittest
 
 class TestProjectionStability(unittest.TestCase):
     def test_projection(self):
+        """Test whether CVXPY works as expected wrt NumPy shapes."""
         x = cvxpy.Variable(1000)
         x_0 = np.ones(1000)
         soc_constr = [cvxpy.norm(x[:-1], 2) <= x[-1]]
