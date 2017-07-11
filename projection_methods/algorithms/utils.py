@@ -1,6 +1,10 @@
-import cvxpy
 import logging
+from multiprocessing import Process, Queue
+from Queue import Empty
+
+import cvxpy
 import numpy as np
+
 
 def project(x_0, cvxpy_set, cvxpy_var):
     """ 
@@ -19,12 +23,24 @@ def project(x_0, cvxpy_set, cvxpy_var):
     -------
     The projection of x_0 onto cvxpy_set : list-like (float)
     """
-    x_star, _ = project_aux(x_0=x_0, cvxpy_set=cvxpy_set, cvxpy_var=cvxpy_var)
+    solvers = [cvxpy.MOSEK, cvxpy.ECOS, cvxpy.MOSEK]
+    for solver in solvers:
+        q = Queue()
+        p = Process(target=project_aux, args=(q, x_0, cvxpy_set, cvxpy_var,
+            solver))
+        p.start()
+        p.join()
+        try:
+            x_star = q.get(block=False)
+            break
+        except Empty:
+            logging.warning('Solver %s failed with exit code %d',
+                solver, p.exitcode)
     return x_star
 
 
-def project_aux(x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
-    use_indirect=True, abstol=1e-4, reltol=1e-3, feastol=1e-4):
+def project_aux(q, x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
+    use_indirect=True, abstol=1e-8, reltol=1e-3, feastol=1e-4):
     """Return the projection and the distance"""
     # If the projection is unconstrained, the projection is trivially
     # idempotent
@@ -34,6 +50,8 @@ def project_aux(x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
     obj = cvxpy.Minimize(cvxpy.pnorm(cvxpy_var - x_0, 2))
     prob = cvxpy.Problem(obj, cvxpy_set)
 
+    # MOSEK sometimes segfaults
+    #
     # ECOS sometimes fails at high tolerances
     #
     # SCS (indirect == True) sometimes returns values that are
@@ -60,8 +78,7 @@ def project_aux(x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
                     'ECOS failed (%s) with tol %.1e; retrying with tol %.1e',
                     str(e), abstol / 10, abstol)
         if not solved:
-            logging.warning('ECOS failed; falling back to SCS.')
-            solver_dist = prob.solve(solver=cvxpy.SCS, use_indirect=use_indirect)
+            logging.warning('ECOS failed.')
 
     x_star = np.array(cvxpy_var.value).flatten()
     np_dist = np.linalg.norm(x_star - x_0, 2)
@@ -75,7 +92,8 @@ def project_aux(x_0, cvxpy_set, cvxpy_var, solver=cvxpy.MOSEK,
     if prob.status != cvxpy.OPTIMAL and prob.status != cvxpy.OPTIMAL_INACCURATE:
         logging.warning('problem status %s', prob.status)
 
-    return x_star, np_dist
+    q.put(x_star)
+    q.put(np_dist)
 
 
 def plane_search(iterates, num_iterates, cvxpy_set, cvxpy_var):
