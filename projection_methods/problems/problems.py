@@ -1,9 +1,12 @@
+import numpy as np
+
 from projection_methods.oracles.affine_set import AffineSet
 from projection_methods.oracles.cartesian_product import CartesianProduct
 from projection_methods.oracles.convex_set import ConvexSet
 from projection_methods.oracles.nonneg import NonNeg
 from projection_methods.oracles.cone import Cone
 from projection_methods.oracles.zeros import Reals, Zeros
+from projection_methods.projectables.hyperplane import Hyperplane
 
 
 class FeasibilityProblem(object):
@@ -94,7 +97,7 @@ class SCSProblem(FeasibilityProblem):
             b (np.array): as defined above
             c (np.array): as defined above
             p_opt (array-like): any point that is optimal for (2) (optional)
-        TODO(akshayka): it is unwieldly to require the user to pass in
+        TODO(akshayka): it is unwieldy to require the user to pass in
         the constructed sets, as well as the problem data Q. But requiring
         them to do so allows us to isolate this class from how sets are
         defined.
@@ -139,10 +142,18 @@ class SCSProblem(FeasibilityProblem):
     def optimal_value(self):
         return self.c.dot(self.p_opt) if self.p_opt is not None else None
 
+    def duality_gap_constraint(self):
+        uv = self.product_set._x
+        slx = slice(0, self.n + self.m)
+        py = uv[slx]
+        cb = np.hstack((self.c, self.b))
+        assert cb.shape[0] == np.prod(cb.shape)
+        return Hyperplane(x=py, a=cb, b=0, pin=True)
+
     # utility functions for extracting the individual components of (u, v);
-    #
     # TODO(akshayka): utility functions to scale variables by tau / kappa
-    # recall that u := (p, y, tau)
+    #
+    # recall that u := (p, y, tau), and p is called 'x' in the SCS paper.
     def p(self, uv):
         assert uv.shape == (self.dimension,)
         return uv[self.product_set.slices[0]]

@@ -29,9 +29,9 @@ class AffineSet(ConvexSet):
         constr = [A * x == b]
         self.A = A
         self.b = b
-        self._hyperplanes = []
         super(AffineSet, self).__init__(x, constr)
         self._kkt_solver = None
+        self.chosen_rows = set([])
 
 
     def contains(self, x_0, atol=1e-4):
@@ -62,11 +62,15 @@ class AffineSet(ConvexSet):
         return sol[:self._shape[0]]
         
 
-    def query(self, x_0, data_hyperplanes=False):
+    def query(self, x_0, data_hyperplanes=0, policy='random'):
         """As ConvexSet.query, but returns a Hyperplane
 
         Args:
             x_0 (array-like): query point
+            data_hyperplanes: number of data hyperplanes to include per query
+                              call
+            policy: policy to use when gathering data hyperplanes; one of
+                \{'random', 'largest_residual'\}.
         Returns:
             array-like: the projection of x_0 onto the set
             list of Hyperplane: a hyperplane of the form <a, x> = b
@@ -76,25 +80,36 @@ class AffineSet(ConvexSet):
         if np.array_equal(x_star, x_0):
             return x_0, []
 
+        hyperplanes = []
         # a.dot(y - x_star) == 0, for all y in affine set
         # <==> a.dot(y) == a.dot(x_star)
         a = x_0 - x_star
         b = a.dot(x_star)
-        hyperplanes = [Hyperplane(x=self._x , a=a, b=b)]
+        if abs(b) < 1e-7:
+            # If the affine set is in fact a subspace, this
+            # will always be triggered.
+            b = np.array([0])
+        hyperplanes.append(Hyperplane(x=self._x , a=a, b=b))
 
-        if data_hyperplanes:
-            # TODO(akshayka): This is an experiment. It needs to be vetted.
-            # The idea is to throw in hyperplanes that correspond to those
-            # entries with large residuals.
-            r = np.abs(self.A.dot(x_0) - self.b)
-
-            # sort the indices of the residuals in decreasing order
-            # TODO(akshayka): the number of hyperplanes should not be hardcoded
-            r_indices = np.flipud(np.argsort(r))[:25]
-            for idx in r_indices:
-                hyperplanes.append(Hyperplane(x=self._x,
-                    a=self.A.getrow(idx).T, b=self.b[idx]))
-        self._hyperplanes.extend(hyperplanes)
+        if data_hyperplanes > 0:
+            if policy == 'random':
+                indices = np.random.permutation(np.prod(self.b.shape))
+            elif policy == 'largest_residual':
+                # sort the indices of the residuals in decreasing order
+                r = np.abs(self.A.dot(x_0) - self.b)
+                indices = np.flipud(np.argsort(r))
+            else:
+                raise ValueError('Unknown policy %s' % policy)
+            num_chosen = 0
+            for idx in indices:
+                if num_chosen >= data_hyperplanes:
+                    break
+                if idx not in self.chosen_rows:
+                    self.chosen_rows.add(idx)
+                    num_chosen += 1
+                    hyperplanes.append(Hyperplane(x=self._x,
+                        a=self.A.getrow(idx).T, b=np.array(self.b[idx])))
+        self._info.extend(hyperplanes)
         return x_star, hyperplanes
 
     def __repr__(self):

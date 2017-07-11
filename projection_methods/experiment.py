@@ -86,8 +86,18 @@ def main():
         help=('maximum number of halfspaces allowed in the outer approx; '
         'defaults to unlimited.'))
     parser.add_argument(
+        '-dh', '--data_hyperplanes', type=int, default=0,
+        help=('number of hyperplanes from data matrix to add per query'))
+    parser.add_argument(
+        '-afp', '--affine_policy', type=str, default='random',
+        help=('policy for inclusion of data hyperplanes'))
+    parser.add_argument(
         '-t', '--theta', type=float, default=1.0,
         help=('over/under-relaxation: must be in (0, 2)'))
+    parser.add_argument(
+        '-dg', '--duality_gap', action='store_true',
+        help=('if solving an SCS problem, include and pin the duality gap '
+        'constraint.'))
     # --- options for k_scs --- #
     parser.add_argument(
         '-p', '--polish', action='store_true',
@@ -104,7 +114,7 @@ def main():
         help=('alpha and beta values for momentum (defaults to no momentum); '
         'e.g.: 0.95 0.05 yields alpha == 0.95, beta == 0.05'))
     parser.add_argument(
-        '-atol', type=float, default=1e-4,
+        '-atol', type=float, default=1e-8,
         help='residual threshold for optimality')
     parser.add_argument(
         '-r', '--random_iterate', action='store_true',
@@ -148,12 +158,20 @@ def main():
             momentum=args['momentum'],
             verbose=args['verbose'])
     elif args['solver'] == k_apop:
+        if args['duality_gap']:
+            assert isinstance(problem, SCSProblem)
+            info = [problem.duality_gap_constraint()]
+        else:
+            info = []
         solver = APOP(max_iters=args['max_iters'], atol=args['atol'],
             do_all_iters=args['do_all_iters'],
+            initial_iterate=initial_iterate,
             outer_policy=k_outers[args['outer']],
             max_hyperplanes=args['max_hyperplanes'],
             max_halfspaces=args['max_halfspaces'],
-            initial_iterate=initial_iterate,
+            data_hyperplanes=args['data_hyperplanes'],
+            affine_policy=args['affine_policy'],
+            info=info,
             momentum=args['momentum'],
             average=not args['alt'],
             theta=args['theta'],
