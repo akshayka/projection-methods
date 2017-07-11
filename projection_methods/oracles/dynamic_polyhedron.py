@@ -59,6 +59,7 @@ class DynamicPolyhedron(Oracle):
         self._polyhedron = polyhedron
         self._outer_hyperplanes = []
         self._outer_halfspaces = []
+        self._pinned = []
         self.max_hyperplanes = max_hyperplanes
         self.max_halfspaces = max_halfspaces
 
@@ -136,7 +137,9 @@ class DynamicPolyhedron(Oracle):
                         size=self.max_halfspaces, replace=False))
             # eviction policies maintain outer as information is added
             return Polyhedron(self._polyhedron._x,
-                self._outer_hyperplanes + self._outer_halfspaces)
+                self._outer_hyperplanes +
+                self._outer_halfspaces +
+                self._pinned)
 
 
     def _evict(self, items, max_len):
@@ -153,17 +156,28 @@ class DynamicPolyhedron(Oracle):
 
     def _add_hyperplane(self, hyperplane):
         if (len(self._outer_hyperplanes) >= self.max_hyperplanes and
-                self.policy in PolyOuter.EVICTIONS):
+                self.policy in PolyOuter.EVICTIONS and
+                not hyperplane.pin):
+            # Note that pinned hyperplanes do _not_ count against the max
+            # number of hyperplanes. The reasoning is that clients should
+            # pin hyperplanes sparingly.
             self._outer_hyperplanes = self._evict(self._outer_hyperplanes,
                 self.max_hyperplanes)
-        self._outer_hyperplanes.append(hyperplane)
+        if hyperplane.pin:
+            self._pinned.append(hyperplane)
+        else:
+            self._outer_hyperplanes.append(hyperplane)
         self._polyhedron.add(hyperplane)
 
 
     def _add_halfspace(self, halfspace):
         if (len(self._outer_halfspaces) >= self.max_halfspaces and
-                self.policy in PolyOuter.EVICTIONS):
+                self.policy in PolyOuter.EVICTIONS and
+                not halfspace.pin):
             self._outer_halfspaces = self._evict(self._outer_halfspaces,
                 self.max_halfspaces)
-        self._outer_halfspaces.append(halfspace)
+        if halfspace.pin:
+            self._pinned.append(halfspace)
+        else:
+            self._outer_halfspaces.append(halfspace)
         self._polyhedron.add(halfspace)
