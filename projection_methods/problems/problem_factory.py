@@ -63,7 +63,7 @@ def cone_program(x, cone_dims, cones, n, A):
     # note that s := uv_vars[4]
     cone_slices = get_slices(cone_dims)
     cone_sets = [cls(uv_vars[4][slx]) for cls, slx in zip(cones, cone_slices)]
-    K = CartesianProduct(cone_sets, cone_slices)
+    K = CartesianProduct(uv_vars[4], cone_sets, cone_slices)
     K_star = K.dual(uv_vars[1])
 
     # Constrain each variable in (u, v) to lie in its corresponding cone
@@ -76,7 +76,7 @@ def cone_program(x, cone_dims, cones, n, A):
     uv_sets[5] = NonNeg(uv_vars[5])
     
     # Finally, create the cartesian product for (u, v)
-    product_set = CartesianProduct(uv_sets, uv_slices)
+    product_set = CartesianProduct(x, uv_sets, uv_slices)
 
     # Construct members of the optimal set, problem data, and the optimal value;
     # recall that (u, v) := (p, y, tau, r, s, kappa). First generate s, by
@@ -89,6 +89,11 @@ def cone_program(x, cone_dims, cones, n, A):
     p = np.random.randn(n)
     b = A.dot(p) + s
     c = -A.T.dot(y)
+
+    # Glue together our primal and dual optimal points to obtain an optimal
+    # point (u, v) = (p, y, tau, r, s, kappa)
+    uv_opt = np.hstack((p, y, 1, np.zeros(p.shape), s, 0))
+    assert uv_opt.shape == (sum(uv_dims),)
 
     # Construct the augmented KKT matrix
     cm = np.matrix(c).T
@@ -106,7 +111,7 @@ def cone_program(x, cone_dims, cones, n, A):
     assert Q_tilde.shape == (Q_dim, 2 * Q_dim)
     affine_set = AffineSet(x=x, A=Q_tilde, b=np.zeros(Q_tilde.shape[0]))
 
-    return SCSProblem(sets=[product_set, affine_set], x_opt=None,
+    return SCSProblem(sets=[product_set, affine_set], x_opt=uv_opt,
         Q=Q, A=A, b=b, c=c, p_opt=p)
 
 
