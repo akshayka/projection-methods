@@ -6,7 +6,7 @@ from projection_methods.problems.problems import SCSProblem
 
 class SCSADMM(Optimizer):
     def __init__(self,
-            max_iters=100, atol=10e-5, do_all_iters=False, polish=False,
+            max_iters=100, atol=10e-8, do_all_iters=False, polish=False,
             verbose=False):
         super(SCSADMM, self).__init__(max_iters, atol, do_all_iters,
             initial_iterate=None, verbose=verbose)
@@ -28,6 +28,7 @@ class SCSADMM(Optimizer):
         iterate = np.ones(problem.dimension)
         iterates = [iterate]
         residuals = []
+        info = []
 
         status = Optimizer.Status.INACCURATE
         for i in xrange(self.max_iters):
@@ -51,7 +52,7 @@ class SCSADMM(Optimizer):
             v_k = self._v(problem, uv_k)
             u_k_plus_v_k = u_k + v_k
             # Project onto the affine set and parse
-            uv_k_tilde = affine_set.project(np.hstack(
+            uv_k_tilde, h_a = affine_set.query(np.hstack(
                 (u_k_plus_v_k, u_k_plus_v_k)))
             u_k_tilde = self._u(problem, uv_k_tilde)    
             v_k_tilde = self._v(problem, uv_k_tilde)
@@ -60,13 +61,16 @@ class SCSADMM(Optimizer):
             # explicitly is easier with my code
             u_k_prime = u_k_tilde - v_k
             v_k_prime = v_k_tilde - u_k
-            uv_k_plus = product_set.project(np.hstack((u_k_prime, v_k_prime)))
+            uv_k_plus, h_p = product_set.query(np.hstack(
+                (u_k_prime, v_k_prime)))
             iterates.append(uv_k_plus)
+            info.extend(h_a + h_p)
         # TODO(akshayka): Consider polishing the result at this step, or even
         # running apop using the final iterate
         if self.polish:
             polisher = APOP(max_iters=100, atol=self.atol, do_all_iters=True,
-                initial_iterate=iterates[-1], average=False, verbose=True)
+                initial_iterate=iterates[-1],
+                average=False, info=info, verbose=True)
             it, res, status = polisher.solve(problem)
             iterates.extend(it)
             residuals.extend(res)
