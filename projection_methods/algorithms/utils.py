@@ -179,3 +179,8 @@ def heavy_ball_update(iterates, velocity, alpha=0.8, beta=0.2):
     else:
         momentum = iterates[-1] - iterates[-2]
         return iterates[-1] + alpha * velocity + beta * momentum
+
+
+def rec_sum(x):
+    """Recursively sum the elements of a (possibly nested) list."""
+    return sum(map(rec_sum, x)) if isinstance(x, list) else x
