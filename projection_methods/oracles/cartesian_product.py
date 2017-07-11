@@ -2,6 +2,7 @@ import copy
 import numpy as np
 
 from projection_methods.oracles.cone import Cone
+import projection_methods.oracles.utils as utils
 
 
 class CartesianProduct(Cone):
@@ -22,28 +23,23 @@ class CartesianProduct(Cone):
                 slices[0] == slice(0, 10) and
                 slices[1] == slice(10, 30).
     """
-    def __init__(self, sets, slices):
+    def __init__(self, x, sets, slices):
         """
         Args:
             sets (list of Cone): as per attribute
-            slices (list of slice): as per at atribute
+            slices (list of slice): as per atribute
         """
         for s in sets:
             assert isinstance(s, Cone)
 
         self.sets = sets
         self.slices = slices
-        # TODO(akshayka): might be returning
-        # incorrect halfspaces? say self.sets[0] has variable
-        # index(index(var)); then the correct "x" to constrain is index(var),
-        # not var ... but is self._x ever used for a cartesian product?
-        # a hacky way to check -- set it to None then run the code
-        x = self.sets[0]._var
         constr = [c for s in sets for c in s._constr]
         super(CartesianProduct, self).__init__(x, constr)
         self._shape = reduce(
             lambda x, y: tuple(one + two for one, two in zip(x, y)),
             [s._shape for s in sets])
+        assert self._shape == np.prod(x.size)
 
 
     def project(self, x_0):
@@ -57,18 +53,22 @@ class CartesianProduct(Cone):
 
 
     def dual(self, x):
+        # TODO(akshayka): assert that x is of the correct size
         cones = []
         for s, slx in zip(self.sets, self.slices):
             cones.append(s.dual(x[slx]))
-        return CartesianProduct(cones, copy.copy(self.slices))
+        return CartesianProduct(x, cones, copy.copy(self.slices))
             
     
-    def query(self, x_0):
+    def query(self, x_0, granular=True):
         """As ConvexSet.query, but returns a list of Halfspaces/Hyperplanes
 
         Computes a halfspace/hyperplane for each cone C_i in the
-        Cartesian product, instead of a single halfspace/hyperplanes for the
+        Cartesian product, instead of a single halfspace/hyperplane for the
         entire set
+
+        TODO(akshayka): Add the option to return a single halfspace for the
+                        entire cone.
 
         Args:
             x_0 (array-like): query point
@@ -79,16 +79,43 @@ class CartesianProduct(Cone):
                 Cartesian product, the i-th slice of x lies in the i-th
                 halfspace/hyperplane
         """
-        x_star = np.zeros(x_0.shape)
-        hyper_half= []
-        for s, slx in zip(self.sets, self.slices):
-            x_s, h_s = s.query(x_0[slx])
-            x_star[slx] = x_s
-            hyper_half.extend(h_s)
+        info = []
+        if granular:
+            x_star = np.zeros(x_0.shape)
+            for s, slx in zip(self.sets, self.slices):
+                x_s, h_s = s.query(x_0[slx])
+                assert x_s.shape == x_0[slx].shape
+                x_star[slx] = x_s
+                info.extend(h_s)
+        else:
+            x_star = self.project(x_0)
+            if not np.array_equal(x_star, x_0):
+                h = utils.containing_halfspace(x_0, x_star, self._x)
+                if h != None:
+                    info.append(h)
         # Note the lazy English below; self._halfspaces here may very well
-        # contain hyperplanes.
-        self._halfspaces.extend(hyper_half)
-        return x_star, hyper_half
+        # contain hyperplanes if info contains hyperplanes.
+        self._info.extend(info)
+        return x_star, info
+
+
+    def residual(self, x_0):
+        """Compute distance from x_0 to the cartesian product.
+
+        Args:
+            x_0 (array-like): query point
+        Returns:
+            list : list of residuals, possibly nested
+        """
+        return [s.residual(x_0[slx]) for s, slx in zip(self.sets, self.slices)]
+
+
+    def residual_str(self, x_0):
+        string = '------- Cone Residuals -------\n'
+        for i, tup in enumerate(zip(self.sets, self.slices)):
+            s, slx = tup
+            string += '%d. %s\n' % (i+1, s.residual_str(x_0[slx]))
+        return string
 
 
     def __repr__(self):
