@@ -22,7 +22,7 @@ class NonNeg(Cone):
         return (x_0 >= -1 * atol).all()
 
     def project(self, x_0):
-        return np.maximum(x_0, 0)
+        return x_0 if self.contains(x_0) else np.maximum(x_0, 0)
 
     def dual(self, x):
         return NonNeg(x)

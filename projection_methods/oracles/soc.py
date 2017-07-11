@@ -20,15 +20,17 @@ class SOC(Cone):
         super(SOC, self).__init__(x, constr)
 
 
-    def _contains(self, norm_z, t, atol=1e-6):
+    def _contains(self, norm_z, t, atol=1e-4):
         return norm_z <= t or np.isclose(norm_z, t, atol=atol)
 
-    def contains(self, x_0, atol=1e-6):
+    def contains(self, x_0, atol=1e-4):
         z = x_0[:-1]
         t = x_0[-1]
         return self._contains(np.linalg.norm(z, 2), t, atol=atol)
 
     def project(self, x_0):
+        if self.contains(x_0):
+            return x_0
         z = x_0[:-1]
         t = x_0[-1]
         norm_z = np.linalg.norm(z, 2)
