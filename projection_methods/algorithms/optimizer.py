@@ -7,7 +7,7 @@ class Optimizer(object):
         OPTIMAL, INACCURATE, INFEASIBLE = range(3)
 
 
-    def __init__(self, max_iters=100, atol=10e-5, do_all_iters=False,
+    def __init__(self, max_iters=100, atol=10e-8, do_all_iters=False,
         initial_iterate=None, verbose=False):
         self._max_iters = max_iters
         self._atol = atol
@@ -42,9 +42,12 @@ class Optimizer(object):
         self._atol = atol
 
     def _compute_residual(self, x_k, y_k, z_k):
-        """Returns tuple (dist from left set, dist from right set)"""
+        """Returns tuple (dist from left set squared,
+        dist from right set squared)"""
         # TODO(akshayka): should these distances be squared? does it matter?
-        return (np.linalg.norm(x_k - y_k, 2), np.linalg.norm(x_k - z_k, 2))
+        return (
+            np.linalg.norm(x_k - y_k, 2)**2,
+            np.linalg.norm(x_k - z_k, 2)**2)
 
     def _is_optimal(self, r_k):
         return r_k[0] <= self.atol and r_k[1] <= self.atol
