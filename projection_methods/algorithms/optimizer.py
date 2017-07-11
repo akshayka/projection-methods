@@ -50,4 +50,4 @@ class Optimizer(object):
             np.linalg.norm(x_k - z_k, 2)**2)
 
     def _is_optimal(self, r_k):
-        return r_k[0] <= self.atol and r_k[1] <= self.atol
+        return reduce(lambda x, y: x and y, [r <= self.atol for r in r_k])

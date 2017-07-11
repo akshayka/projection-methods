@@ -40,6 +40,18 @@ class FeasibilityProblem(object):
         self.dimension = x_opt.shape
 
 
+    def residual(self, x_0):
+        """Return tuple (residual for first set, residual for second set)
+
+        Args: 
+            x_0 (array-like): the point for which to compute the residual
+        Returns:
+            tuple (float, float): (residual for first set,
+                                   residual for second set)
+        """
+        return (sets[0].residual(x_0), sets[1].residual(x_0))
+
+
     def __repr__(self):
         string = type(self).__name__ + '\n'
         string += 'dimension: %d\n' % self.dimension
@@ -149,6 +161,38 @@ class SCSProblem(FeasibilityProblem):
         cb = np.hstack((self.c, self.b))
         assert cb.shape[0] == np.prod(cb.shape)
         return Hyperplane(x=py, a=cb, b=0, pin=True)
+
+    def residual(self, uv):
+        """Return tuple of scaled residuals (primal, dual, cone, duality gap)
+
+        primal residual := norm(A.dot(p) + s - b) / (1 + norm(self.b))
+        dual residual := norm(A.T.dot(y) + c) / (1 + norm(self.c))
+        cone residual := norm(uv - self.product_set.project(uv))
+        duality gap := |c.dot(p) + b.dot(y)| / (1 + |c.dot(x) + b.dot(y)|
+
+        Args:
+            uv (array-like): the point for which to compute the residual
+                         
+        Returns:
+            tuple (float, float, float): (primal residual,
+                                          dual residual,
+                                          cone residual,
+                                          duality gap)
+        """
+        p = self.p(uv)
+        s = self.s(uv)
+        y = self.y(uv)
+
+        # TODO(akshayka): cache the denominators of pr and dr
+        pr = np.linalg.norm(self.A.dot(p) + s - self.b, 2) / (
+            1 + np.linalg.norm(self.b))
+        dr = np.linalg.norm(self.A.T.dot(y) + self.c) / (
+            1 + np.linalg.norm(self.c))
+        cr = np.linalg.norm(uv - self.product_set.project(uv), 2)
+        dg_unscaled = np.abs(self.c.dot(p) + self.b.dot(y))
+        dg = dg_unscaled  / (1 + dg_unscaled)
+
+        return (pr, dr, cr, dg)
 
     # utility functions for extracting the individual components of (u, v);
     # TODO(akshayka): utility functions to scale variables by tau / kappa

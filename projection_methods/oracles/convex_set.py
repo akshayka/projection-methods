@@ -68,7 +68,7 @@ class ConvexSet(Projectable, Oracle):
             raise(ValueError, "Unknown kind " + str(kind))
 
     def residual(self, x_0):
-        return np.linalg.norm(x_0 - self.project(x_0), 2) ** 2
+        return np.linalg.norm(x_0 - self.project(x_0), 2)
 
     def residual_str(self, x_0):
         string = self.__repr__()
