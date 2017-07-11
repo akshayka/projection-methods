@@ -44,7 +44,7 @@ class AltP(Optimizer):
             if self.momentum is not None:
                 iterate = heavy_ball_update(
                     iterates=iterates, velocity=x_k_plus-x_k,
-                    alpha=self.momentum['alpha'],
-                    beta=self.momentum['beta'])
+                    alpha=self.momentum[0],
+                    beta=self.momentum[1])
             iterates.append(x_k_plus)
         return iterates, residuals, status
