@@ -13,7 +13,8 @@ class Zeros(Cone):
             x (cvxpy.Variable): a symbolic representation of
                 members of the set
         """
-        constr = [x == 0]
+        constr = [x == np.zeros(np.prod(x.size))]
+        self._unqueried = True
         super(Zeros, self).__init__(x, constr)
 
     def contains(self, x_0, atol=1e-6):
@@ -30,17 +31,25 @@ class Zeros(Cone):
             return x_0, []
 
         x_star = self.project(x_0) 
-        h = []
-        # This is an abuse of the word hyperplane; this function
-        # actually returns a set of hyperplanes that exactly identifies
-        # the zero set. If added to an outer approximation, the
-        # interpretation is that we are doing a presolve by forcing
-        # x to be 0.
-        # TODO(akshayka): It is not clear to me, at all, whether it is a good
-        # idea to return such a construct.
-        A = scipy.sparse.eye(x_0.shape[0])
-        h = [Hyperplane(self._x, A, 0)]
-        return x_star, h
+        if self._unqueried:
+            # This is an abuse of the word hyperplane; this function
+            # actually returns a set of hyperplanes that exactly identifies
+            # the zero set. If added to an outer approximation, the
+            # interpretation is that we are doing a presolve by forcing
+            # x to be 0.
+            assert np.prod(self._x.size) == x_0.shape[0]
+            A = scipy.sparse.eye(x_0.shape[0])
+            # Note that we signal to the dynamic polyhedron that this
+            # hyperplane should be pinned. The reasoning is that this
+            # "hyperplane" is simply a linear algebraic presolve, and enforcing
+            # it should not increase our computational complexity if our
+            # implementation is sound.
+            h = [Hyperplane(self._x, A, np.zeros(x_0.shape[0]), pin=True)]
+            self._unqueried = False
+            self._info.append(h)
+            return x_star, h
+        else:
+            return x_star, []
 
 
 class Reals(Cone):
@@ -65,3 +74,6 @@ class Reals(Cone):
 
     def query(self, x_0):
         return x_0, []
+
+    def residual(self, x_0):
+        return 0
