@@ -7,18 +7,19 @@ class Hyperplane(Projectable):
     """A projectable hyperplane
 
      Defines a hyperplane of the form
-        \{ x | <a, x> = b \}.
+        \{ x | <a, x> = b \} or a set of hyperplanes \{ x | Ax == b \}.
      """
-    def __init__(self, x, a, b):
+    def __init__(self, x, a, b, pin=False):
         """
         Args:
             x (cvxpy.Variable): a symbolic representation of
                 members of the set
             a (array-like): normal vector
-            b (float): offset, a real number
+            b (float or array-like): offset
         """
         self.a = a
-        self.b = float(b)
+        self.b = b
+        self.pin = pin
         constr = [a.T * x == b]
         super(Hyperplane, self).__init__(x, constr)
 

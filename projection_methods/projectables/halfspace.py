@@ -9,16 +9,17 @@ class Halfspace(Projectable):
      Defines a halfpsace of the form
         \{ x | <a, x> \leq b \}.
      """
-    def __init__(self, x, a, b):
+    def __init__(self, x, a, b, pin=False):
         """
         Args:
             x (cvxpy.Variable): a symbolic representation of
                 members of the set
             a (array-like): normal vector
-            b (float): offset, a real number
+            b (float or array-like): offset
         """
         self.a = a
-        self.b = float(b)
+        self.b = b
+        self.pin = pin
         constr = [a.T * x <= b]
         super(Halfspace, self).__init__(x, constr)
 
