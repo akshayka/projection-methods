@@ -1,11 +1,13 @@
+import numpy as np
+
 from projection_methods.oracles.oracle import Oracle
 from projection_methods.projectables.polyhedron import Polyhedron
 from projection_methods.projectables.projectable import Projectable
-from projection_methods.projectables.halfspace import Halfspace
+import projection_methods.oracles.utils as utils
 
 
 class ConvexOuter(object):
-    POLYHEDRAL, EXACT = range(2)
+    POLYHEDRAL, EXACT, EMPTY = range(3)
 
 class ConvexSet(Projectable, Oracle):
     """A projectable oracle for convex sets"""
@@ -17,7 +19,7 @@ class ConvexSet(Projectable, Oracle):
             constr (list of cvxpy.Expression): constraints to
                 impose on members of set
         """
-        self._halfspaces = []
+        self._info= []
         super(ConvexSet, self).__init__(x, constr)
 
 
@@ -37,17 +39,14 @@ class ConvexSet(Projectable, Oracle):
                 of x_0 onto the set
         """
         x_star = self.project(x_0)
-        if (x_0 == x_star).all():
+        if np.array_equal(x_star, x_0):
             return x_0, []
-
-        # a = x_0 - x_star
-        # a.T(y - x_star) <= 0 for all y in C
-        # <==> a.T(y) <= a.T(x_star) := b
-        a = x_0 - x_star
-        b = a.dot(x_star)
-        halfspace = Halfspace(x=self._x , a=a, b=b) 
-        self._halfspaces.append(halfspace)
-        return x_star, [halfspace]
+        info = []
+        h = utils.containing_halfspace(x_0, x_star, self._x)
+        if h is not None:
+            self._info.append(h)
+            info.append(h)
+        return x_star, info
 
 
     def outer(self, kind=ConvexOuter.POLYHEDRAL):
@@ -60,8 +59,18 @@ class ConvexSet(Projectable, Oracle):
                 that implements Projectable
         """
         if kind == ConvexOuter.POLYHEDRAL:
-            return Polyhedron(self._x, self._halfspaces)
-        elif kind == CovnexOuter.EXACT:
+            return Polyhedron(self._x, self._info)
+        elif kind == ConvexOuter.EXACT:
             return self
+        elif kind == ConvexOuter.EMPTY:
+            return Polyhedron(self._x, information=[])
         else:
             raise(ValueError, "Unknown kind " + str(kind))
+
+    def residual(self, x_0):
+        return np.linalg.norm(x_0 - self.project(x_0), 2) ** 2
+
+    def residual_str(self, x_0):
+        string = self.__repr__()
+        string += '\t res: %e' % self.residual(x_0)
+        return string
